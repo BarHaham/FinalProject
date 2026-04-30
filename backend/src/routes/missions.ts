@@ -1,0 +1,301 @@
+import express from 'express';
+import pool from '../db/connection';
+import { beginnerDailyMission, practiceSessions } from '../data/content';
+import { calculateLevel, weekStartDate } from '../services/userState';
+
+const router = express.Router();
+
+const toDateOnly = (value: unknown) => {
+  if (!value) return null;
+  if (value instanceof Date) return value.toISOString().split('T')[0];
+  return String(value).split('T')[0];
+};
+
+const getCurrentPathLesson = async (userId: number) => {
+  const result = await pool.query(
+    `SELECT pl.*
+     FROM path_lessons pl
+     LEFT JOIN user_path_progress upp
+      ON upp.lesson_id = pl.id AND upp.user_id = $1
+     WHERE COALESCE(upp.completed, FALSE) = FALSE
+     ORDER BY pl.section_number, pl.unit_number, pl.lesson_number
+     LIMIT 1`,
+    [userId]
+  );
+
+  return result.rows[0] || null;
+};
+
+const createMissionForUser = async (userId: number) => {
+  const currentLesson = await getCurrentPathLesson(userId);
+  const template = currentLesson
+    ? {
+      title: currentLesson.lesson_name,
+      description: currentLesson.lesson_type === 'Workout'
+        ? 'A tiny first session to start your streak without pressure.'
+        : beginnerDailyMission.description,
+      durationMinutes: currentLesson.estimated_duration_minutes,
+      difficultyLevel: currentLesson.difficulty,
+      focusArea: currentLesson.lesson_type,
+      xpReward: currentLesson.xp_reward,
+      missionType: 'Daily mission',
+      exercises: currentLesson.exercises || beginnerDailyMission.exercises,
+    }
+    : beginnerDailyMission;
+
+  const result = await pool.query(
+    `INSERT INTO missions (
+      user_id,
+      title,
+      description,
+      duration_minutes,
+      difficulty_level,
+      focus_area,
+      xp_reward,
+      mission_type,
+      exercises
+    )
+    VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)
+    RETURNING *`,
+    [
+      userId,
+      template.title,
+      template.description,
+      template.durationMinutes,
+      template.difficultyLevel,
+      template.focusArea,
+      template.xpReward,
+      template.missionType,
+      JSON.stringify(template.exercises),
+    ]
+  );
+
+  return result.rows[0];
+};
+
+// Get or create today's daily mission
+router.get('/daily/:userId', async (req, res) => {
+  try {
+    const userId = Number(req.params.userId);
+    const today = new Date().toISOString().split('T')[0];
+
+    const existing = await pool.query(
+      `SELECT *
+       FROM missions
+       WHERE user_id = $1
+        AND DATE(created_at) = $2
+        AND mission_type = 'Daily mission'
+       ORDER BY created_at DESC
+       LIMIT 1`,
+      [userId, today]
+    );
+
+    if (existing.rows.length > 0) {
+      return res.json(existing.rows[0]);
+    }
+
+    const mission = await createMissionForUser(userId);
+    res.status(201).json(mission);
+  } catch (error: any) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+// Practice catalog
+router.get('/practice', (_req, res) => {
+  res.json(practiceSessions);
+});
+
+// Get all missions for user
+router.get('/user/:userId', async (req, res) => {
+  try {
+    const { userId } = req.params;
+    const result = await pool.query('SELECT * FROM missions WHERE user_id = $1 ORDER BY created_at DESC', [userId]);
+    res.json(result.rows);
+  } catch (error: any) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+// Complete mission and update XP, streak, path, achievements, and weekly leaderboard
+router.post('/:missionId/complete', async (req, res) => {
+  const client = await pool.connect();
+
+  try {
+    const missionId = Number(req.params.missionId);
+    const today = new Date().toISOString().split('T')[0];
+
+    await client.query('BEGIN');
+
+    const missionResult = await client.query('SELECT * FROM missions WHERE id = $1 FOR UPDATE', [missionId]);
+    if (missionResult.rows.length === 0) {
+      await client.query('ROLLBACK');
+      return res.status(404).json({ error: 'Mission not found' });
+    }
+
+    const mission = missionResult.rows[0];
+    if (mission.completed) {
+      const [progress, streak] = await Promise.all([
+        client.query('SELECT * FROM user_progress WHERE user_id = $1', [mission.user_id]),
+        client.query('SELECT * FROM streaks WHERE user_id = $1', [mission.user_id]),
+      ]);
+      await client.query('COMMIT');
+      return res.json({
+        mission,
+        progress: progress.rows[0],
+        streak: streak.rows[0],
+        alreadyCompleted: true,
+      });
+    }
+
+    const completedMission = await client.query(
+      `UPDATE missions
+       SET completed = TRUE,
+           completed_at = CURRENT_TIMESTAMP,
+           updated_at = CURRENT_TIMESTAMP
+       WHERE id = $1
+       RETURNING *`,
+      [missionId]
+    );
+
+    const currentProgress = await client.query('SELECT * FROM user_progress WHERE user_id = $1 FOR UPDATE', [mission.user_id]);
+    const totalXp = (currentProgress.rows[0]?.total_xp || 0) + mission.xp_reward;
+    const totalMinutes = (currentProgress.rows[0]?.total_minutes_trained || 0) + (mission.duration_minutes || 0);
+    const totalMissions = (currentProgress.rows[0]?.total_missions_completed || 0) + 1;
+
+    const progress = await client.query(
+      `INSERT INTO user_progress (
+        user_id,
+        total_xp,
+        current_level,
+        current_xp_in_level,
+        total_missions_completed,
+        total_minutes_trained
+      )
+      VALUES ($1, $2, $3, $4, $5, $6)
+      ON CONFLICT (user_id)
+      DO UPDATE SET
+        total_xp = EXCLUDED.total_xp,
+        current_level = EXCLUDED.current_level,
+        current_xp_in_level = EXCLUDED.current_xp_in_level,
+        total_missions_completed = EXCLUDED.total_missions_completed,
+        total_minutes_trained = EXCLUDED.total_minutes_trained,
+        updated_at = CURRENT_TIMESTAMP
+      RETURNING *`,
+      [mission.user_id, totalXp, calculateLevel(totalXp), totalXp, totalMissions, totalMinutes]
+    );
+
+    const streakResult = await client.query('SELECT * FROM streaks WHERE user_id = $1 FOR UPDATE', [mission.user_id]);
+    const previousStreak = streakResult.rows[0];
+    const lastCompletedDate = toDateOnly(previousStreak?.last_completed_date);
+    const yesterday = new Date();
+    yesterday.setDate(yesterday.getDate() - 1);
+    const yesterdayDate = yesterday.toISOString().split('T')[0];
+
+    let currentStreak = 1;
+    if (lastCompletedDate === today) {
+      currentStreak = previousStreak?.current_streak || 1;
+    } else if (lastCompletedDate === yesterdayDate) {
+      currentStreak = (previousStreak?.current_streak || 0) + 1;
+    }
+
+    const streak = await client.query(
+      `INSERT INTO streaks (user_id, current_streak, longest_streak, last_completed_date)
+       VALUES ($1, $2, $2, $3)
+       ON CONFLICT (user_id)
+       DO UPDATE SET
+        current_streak = EXCLUDED.current_streak,
+        longest_streak = GREATEST(streaks.longest_streak, EXCLUDED.current_streak),
+        last_completed_date = EXCLUDED.last_completed_date,
+        updated_at = CURRENT_TIMESTAMP
+       RETURNING *`,
+      [mission.user_id, currentStreak, today]
+    );
+
+    const pathLesson = await client.query(
+      `SELECT pl.id
+       FROM path_lessons pl
+       LEFT JOIN user_path_progress upp
+        ON upp.lesson_id = pl.id AND upp.user_id = $1
+       WHERE COALESCE(upp.completed, FALSE) = FALSE
+       ORDER BY pl.section_number, pl.unit_number, pl.lesson_number
+       LIMIT 1`,
+      [mission.user_id]
+    );
+
+    if (pathLesson.rows.length > 0) {
+      await client.query(
+        `INSERT INTO user_path_progress (user_id, lesson_id, completed, attempted, completed_at)
+         VALUES ($1, $2, TRUE, TRUE, CURRENT_TIMESTAMP)
+         ON CONFLICT (user_id, lesson_id)
+         DO UPDATE SET completed = TRUE, attempted = TRUE, completed_at = CURRENT_TIMESTAMP`,
+        [mission.user_id, pathLesson.rows[0].id]
+      );
+
+      const nextLesson = await client.query(
+        `SELECT pl.id
+         FROM path_lessons pl
+         LEFT JOIN user_path_progress upp
+          ON upp.lesson_id = pl.id AND upp.user_id = $1
+         WHERE COALESCE(upp.completed, FALSE) = FALSE
+         ORDER BY pl.section_number, pl.unit_number, pl.lesson_number
+         LIMIT 1`,
+        [mission.user_id]
+      );
+
+      if (nextLesson.rows.length > 0) {
+        await client.query(
+          `INSERT INTO user_path_progress (user_id, lesson_id, completed, attempted)
+           VALUES ($1, $2, FALSE, TRUE)
+           ON CONFLICT (user_id, lesson_id)
+           DO UPDATE SET attempted = TRUE`,
+          [mission.user_id, nextLesson.rows[0].id]
+        );
+      }
+    }
+
+    const unlockedAchievements: string[] = [];
+    const unlockAchievement = async (name: string) => {
+      const result = await client.query(
+        `UPDATE achievements
+         SET unlocked = TRUE, unlocked_at = CURRENT_TIMESTAMP
+         WHERE user_id = $1 AND achievement_name = $2 AND unlocked = FALSE
+         RETURNING achievement_name`,
+        [mission.user_id, name]
+      );
+      if (result.rows.length > 0) unlockedAchievements.push(result.rows[0].achievement_name);
+    };
+
+    await unlockAchievement('First Workout Completed');
+    if (currentStreak >= 3) await unlockAchievement('3-Day Streak');
+    if (currentStreak >= 7) await unlockAchievement('7-Day Streak');
+    if (totalXp >= 100) await unlockAchievement('100 XP Earned');
+    if (String(mission.focus_area).toLowerCase().includes('cardio')) await unlockAchievement('Cardio Starter');
+
+    const weekStart = weekStartDate();
+    await client.query(
+      `INSERT INTO leaderboard (user_id, league, weekly_xp, rank_position, week_start_date)
+       VALUES ($1, 'Bronze', $2, 1, $3)
+       ON CONFLICT (user_id, week_start_date)
+       DO UPDATE SET weekly_xp = leaderboard.weekly_xp + $2`,
+      [mission.user_id, mission.xp_reward, weekStart]
+    );
+
+    await client.query('COMMIT');
+
+    res.json({
+      mission: completedMission.rows[0],
+      progress: progress.rows[0],
+      streak: streak.rows[0],
+      unlockedAchievements,
+      alreadyCompleted: false,
+    });
+  } catch (error: any) {
+    await client.query('ROLLBACK');
+    res.status(500).json({ error: error.message });
+  } finally {
+    client.release();
+  }
+});
+
+export default router;

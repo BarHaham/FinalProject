@@ -1,0 +1,81 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+body {
+  font-family: 'Inter', system-ui, sans-serif;
+  background: #f8f7ff;
+  color: #1e2250;
+}
+
+.floating-mascot {
+  animation: mascot-bob 1.8s ease-in-out infinite alternate;
+}
+
+.fitlingo-avatar-logo {
+  background-image: url('./assets/fitlingo-logo.png');
+  background-size: 255%;
+  background-position: 50% 14%;
+  background-repeat: no-repeat;
+}
+
+@keyframes mascot-bob {
+  from {
+    margin-top: 0;
+  }
+  to {
+    margin-top: 12px;
+  }
+}
+
+@layer components {
+  .btn-primary {
+    @apply rounded-md bg-primary px-4 py-2 font-black text-white shadow-sm transition hover:bg-[#6532d8];
+  }
+
+  .btn-secondary {
+    @apply rounded-md bg-secondary px-4 py-2 font-black text-white shadow-sm transition hover:bg-[#16a9a3];
+  }
+
+  .btn-ghost-dark {
+    @apply rounded-md border border-white/20 px-4 py-2 font-black text-white transition hover:bg-white/10;
+  }
+
+  .card {
+    @apply rounded-md bg-white p-4 shadow;
+  }
+
+  .input-field {
+    @apply w-full rounded-md border border-slate-300 px-3 py-2 focus:border-primary focus:outline-none;
+  }
+
+  .choice-button {
+    @apply rounded-md border border-slate-200 bg-white px-4 py-3 text-left font-bold text-slate-700 transition hover:border-primary;
+  }
+
+  .choice-button-active {
+    @apply border-primary bg-[#f1edff] text-slate-950 ring-2 ring-primary/20;
+  }
+
+  .stat-card {
+    @apply rounded-md border border-slate-200 bg-white p-5 shadow-sm;
+  }
+
+  .stat-label {
+    @apply text-sm font-bold text-slate-500;
+  }
+
+  .stat-value {
+    @apply mt-2 text-4xl font-black text-slate-950;
+  }
+
+  .mini-metric {
+    @apply rounded-md bg-slate-100 px-3 py-2 text-sm font-black text-slate-600;
+  }
+}

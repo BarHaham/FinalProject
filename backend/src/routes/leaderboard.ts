@@ -1,0 +1,54 @@
+import express from 'express';
+import pool from '../db/connection';
+
+const router = express.Router();
+
+// Get leaderboard for current week
+router.get('/current/:league', async (req, res) => {
+  try {
+    const { league } = req.params;
+    const result = await pool.query(
+      'SELECT l.*, u.name FROM leaderboard l JOIN users u ON l.user_id = u.id WHERE l.league = $1 ORDER BY l.rank_position ASC LIMIT 100',
+      [league]
+    );
+
+    res.json(result.rows);
+  } catch (error: any) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+// Get all leagues
+router.get('/', async (req, res) => {
+  try {
+    const leagues = ['Bronze', 'Silver', 'Gold', 'Platinum', 'Diamond'];
+    const result = await pool.query(
+      'SELECT DISTINCT league FROM leaderboard ORDER BY league'
+    );
+
+    res.json(result.rows.length > 0 ? result.rows : leagues.map(l => ({ league: l })));
+  } catch (error: any) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+// Get user rank
+router.get('/user/:userId', async (req, res) => {
+  try {
+    const { userId } = req.params;
+    const result = await pool.query(
+      'SELECT * FROM leaderboard WHERE user_id = $1 ORDER BY week_start_date DESC LIMIT 1',
+      [userId]
+    );
+
+    if (result.rows.length === 0) {
+      return res.json({ message: 'User not on leaderboard' });
+    }
+
+    res.json(result.rows[0]);
+  } catch (error: any) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+export default router;
