@@ -1,7 +1,9 @@
 import express from 'express';
 import pool from '../db/connection';
+import { authenticateToken } from '../middleware/auth';
 
 const router = express.Router();
+router.use(authenticateToken);
 
 const dateOnly = (value: unknown) => {
   if (!value) return null;

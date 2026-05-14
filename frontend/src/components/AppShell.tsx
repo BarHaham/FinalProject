@@ -13,6 +13,7 @@ const navItems = [
   { to: '/path', labelKey: 'nav.path' },
   { to: '/practice', labelKey: 'nav.practice' },
   { to: '/progress', labelKey: 'nav.progress' },
+  { to: '/leaderboard', labelKey: 'nav.leaderboard' },
   { to: '/profile', labelKey: 'nav.profile' },
 ];
 
@@ -88,8 +89,8 @@ const AppShell: React.FC<AppShellProps> = ({ children, title }) => {
                 <option value="en">{t('language.english')}</option>
                 <option value="he">{t('language.hebrew')}</option>
               </select>
-              <Link to="/mission" className="btn-primary">
-                {t('nav.start')}
+              <Link to="/mission" className="btn-primary text-sm">
+                {t('dashboard.startToday')}
               </Link>
             </div>
           </div>
@@ -98,7 +99,7 @@ const AppShell: React.FC<AppShellProps> = ({ children, title }) => {
         <main className="mx-auto max-w-6xl px-4 py-6 pb-24 lg:px-8">{children}</main>
       </div>
 
-      <nav className="fixed bottom-0 left-0 right-0 z-30 grid grid-cols-5 border-t border-slate-200 bg-white lg:hidden">
+      <nav className="fixed bottom-0 left-0 right-0 z-30 grid grid-cols-6 border-t border-slate-200 bg-white lg:hidden">
         {navItems.map((item) => (
           <NavLink
             key={item.to}

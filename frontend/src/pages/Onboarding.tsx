@@ -7,7 +7,7 @@ import {
   mergeUserWithOnboarding,
   saveOnboardingProfile,
 } from '../utils/storage';
-import { apiUrl, hasRealApi } from '../utils/api';
+import api from '../utils/api';
 import { formatText, useLanguage } from '../i18n/LanguageContext';
 
 const goals = [
@@ -57,20 +57,11 @@ const Onboarding: React.FC = () => {
     const user = getStoredUser();
     if (user) {
       const updatedUser = mergeUserWithOnboarding(user, profile);
-      if (hasRealApi) {
-        try {
-          const response = await fetch(`${apiUrl}/users/${user.id}/onboarding`, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify(profile),
-          });
-          if (response.ok) {
-            const savedUser = await response.json();
-            localStorage.setItem('user', JSON.stringify({ ...updatedUser, ...savedUser }));
-          }
-        } catch {
-          localStorage.setItem('user', JSON.stringify(updatedUser));
-        }
+      try {
+        const { data: savedUser } = await api.post(`/users/${user.id}/onboarding`, profile);
+        localStorage.setItem('user', JSON.stringify({ ...updatedUser, ...savedUser }));
+      } catch {
+        localStorage.setItem('user', JSON.stringify(updatedUser));
       }
     }
     navigate('/dashboard');
@@ -161,6 +152,12 @@ const Onboarding: React.FC = () => {
                 <input className="input-field" placeholder={t('onboarding.age')} value={profile.age} onChange={(event) => setProfile({ ...profile, age: event.target.value })} />
                 <input className="input-field" placeholder={t('onboarding.height')} value={profile.height} onChange={(event) => setProfile({ ...profile, height: event.target.value })} />
                 <input className="input-field" placeholder={t('onboarding.weight')} value={profile.weight} onChange={(event) => setProfile({ ...profile, weight: event.target.value })} />
+                <select className="input-field" value={profile.gender} onChange={(event) => setProfile({ ...profile, gender: event.target.value })}>
+                  <option value="Prefer not to say">{t('onboarding.genderPreferNot')}</option>
+                  <option value="Male">{t('onboarding.genderMale')}</option>
+                  <option value="Female">{t('onboarding.genderFemale')}</option>
+                  <option value="Non-binary">{t('onboarding.genderNonBinary')}</option>
+                </select>
                 <select className="input-field" value={profile.activityLevel} onChange={(event) => setProfile({ ...profile, activityLevel: event.target.value })}>
                   <option>Mostly sitting</option>
                   <option>Light activity</option>

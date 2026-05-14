@@ -12,6 +12,8 @@ const jwtOptions: jwt.SignOptions = {
   expiresIn: (process.env.JWT_EXPIRY || '7d') as jwt.SignOptions['expiresIn'],
 };
 
+const normalizeEmail = (email: unknown) => String(email || '').trim().toLowerCase();
+
 const createTemporaryPassword = () => {
   const random = Math.random().toString(36).slice(2, 8);
   return `Sport-${random}-${Date.now().toString().slice(-4)}`;
@@ -20,7 +22,8 @@ const createTemporaryPassword = () => {
 // Register
 router.post('/register', async (req, res) => {
   try {
-    const { email, password, name } = req.body;
+    const { password, name } = req.body;
+    const email = normalizeEmail(req.body.email);
 
     if (!email || !password || !name) {
       return res.status(400).json({ error: 'Missing required fields' });
@@ -64,7 +67,8 @@ router.post('/register', async (req, res) => {
 // Login
 router.post('/login', async (req, res) => {
   try {
-    const { email, password } = req.body;
+    const { password } = req.body;
+    const email = normalizeEmail(req.body.email);
 
     if (!email || !password) {
       return res.status(400).json({ error: 'Email and password required' });
@@ -113,7 +117,7 @@ router.post('/login', async (req, res) => {
 // Forgot password
 router.post('/forgot-password', async (req, res) => {
   try {
-    const { email } = req.body;
+    const email = normalizeEmail(req.body.email);
 
     if (!email) {
       return res.status(400).json({ error: 'Email is required' });

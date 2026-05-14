@@ -1,11 +1,10 @@
 import React, { useEffect, useState } from 'react';
-import axios from 'axios';
 import toast from 'react-hot-toast';
 import AppShell from '../components/AppShell';
 import { achievements } from '../data/sportLingoData';
 import { getStoredUser } from '../utils/storage';
 import { useLanguage } from '../i18n/LanguageContext';
-import { apiUrl } from '../utils/api';
+import api from '../utils/api';
 
 interface User {
   id: number;
@@ -52,10 +51,7 @@ const Profile: React.FC = () => {
     if (!formData || !user) return;
 
     try {
-      await axios.put(
-        `${apiUrl}/users/${user.id}`,
-        formData
-      );
+      await api.put(`/users/${user.id}`, formData);
 
       setUser(formData);
       localStorage.setItem('user', JSON.stringify(formData));
@@ -82,7 +78,7 @@ const Profile: React.FC = () => {
 
     setPasswordLoading(true);
     try {
-      await axios.post(`${apiUrl}/users/${user.id}/change-password`, {
+      await api.post(`/users/${user.id}/change-password`, {
         currentPassword: passwordForm.currentPassword,
         newPassword: passwordForm.newPassword,
         confirmPassword: passwordForm.confirmPassword,

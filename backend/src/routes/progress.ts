@@ -1,8 +1,10 @@
 import express from 'express';
 import pool from '../db/connection';
 import { calculateLevel } from '../services/userState';
+import { authenticateToken } from '../middleware/auth';
 
 const router = express.Router();
+router.use(authenticateToken);
 
 // Get user progress
 router.get('/:userId', async (req, res) => {
@@ -92,11 +94,70 @@ router.get('/:userId/path', async (req, res) => {
   }
 });
 
+// Complete a path lesson
+router.post('/:userId/path/complete', async (req, res) => {
+  const client = await pool.connect();
+  try {
+    const { userId } = req.params;
+    const { lessonId } = req.body;
+
+    if (!lessonId) {
+      return res.status(400).json({ error: 'lessonId is required' });
+    }
+
+    await client.query('BEGIN');
+
+    await client.query(
+      `INSERT INTO user_path_progress (user_id, lesson_id, completed, attempted, completed_at)
+       VALUES ($1, $2, TRUE, TRUE, CURRENT_TIMESTAMP)
+       ON CONFLICT (user_id, lesson_id)
+       DO UPDATE SET completed = TRUE, attempted = TRUE, completed_at = CURRENT_TIMESTAMP`,
+      [userId, lessonId]
+    );
+
+    const nextLesson = await client.query(
+      `SELECT pl.id
+       FROM path_lessons pl
+       LEFT JOIN user_path_progress upp
+        ON upp.lesson_id = pl.id AND upp.user_id = $1
+       WHERE COALESCE(upp.completed, FALSE) = FALSE
+       ORDER BY pl.section_number, pl.unit_number, pl.lesson_number
+       LIMIT 1`,
+      [userId]
+    );
+
+    if (nextLesson.rows.length > 0) {
+      await client.query(
+        `INSERT INTO user_path_progress (user_id, lesson_id, completed, attempted)
+         VALUES ($1, $2, FALSE, TRUE)
+         ON CONFLICT (user_id, lesson_id)
+         DO UPDATE SET attempted = TRUE`,
+        [userId, nextLesson.rows[0].id]
+      );
+    }
+
+    await client.query('COMMIT');
+
+    res.json({
+      completed: true,
+      nextLessonId: nextLesson.rows[0]?.id ?? null,
+    });
+  } catch (error: any) {
+    await client.query('ROLLBACK');
+    res.status(500).json({ error: error.message });
+  } finally {
+    client.release();
+  }
+});
+
 // Get achievements
 router.get('/:userId/achievements', async (req, res) => {
   try {
     const { userId } = req.params;
-    const result = await pool.query('SELECT * FROM achievements WHERE user_id = $1 AND unlocked = TRUE', [userId]);
+    const result = await pool.query(
+      'SELECT * FROM achievements WHERE user_id = $1 ORDER BY unlocked DESC, achievement_name',
+      [userId]
+    );
     res.json(result.rows);
   } catch (error: any) {
     res.status(500).json({ error: error.message });

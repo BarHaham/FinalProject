@@ -5,6 +5,11 @@ export type Exercise = {
   safetyNote: string;
   target: string;
   alternative: string;
+  mediaType?: 'gif' | 'video' | 'image' | 'none';
+  mediaUrl?: string;
+  mediaCredit?: string;
+  instructorCue?: string;
+  musclesWorked?: string[];
 };
 
 export type Mission = {
@@ -46,144 +51,155 @@ export type PracticeCategory = {
   level: string;
 };
 
+const starterExercises: Exercise[] = [
+  {
+    name: 'Jumping Jacks',
+    duration: '45 seconds',
+    instructions: 'Jump your feet out while raising your arms overhead, then return to center with soft landings.',
+    safetyNote: 'Keep your knees soft and switch to step jacks if jumping feels uncomfortable.',
+    target: 'Warm-up',
+    alternative: 'Step jacks',
+    mediaType: 'none',
+    mediaUrl: '',
+    instructorCue: 'Show upbeat full-body movement with arms overhead and controlled landings.',
+    musclesWorked: ['Shoulders', 'Hips', 'Calves', 'Core'],
+  },
+  {
+    name: 'Chair Squat',
+    duration: '8 reps',
+    instructions: 'Sit your hips back toward a chair, keep your chest lifted, then stand by pressing through your heels.',
+    safetyNote: 'Move with control and keep the range pain-free.',
+    target: 'Legs + glutes',
+    alternative: 'Half squat',
+    mediaType: 'none',
+    mediaUrl: '',
+    instructorCue: 'Show knees tracking over toes and hips moving back first.',
+    musclesWorked: ['Quads', 'Glutes', 'Core'],
+  },
+  {
+    name: 'Dead Bug',
+    duration: '8 reps each side',
+    instructions: 'Lie on your back, brace your core, and slowly lower the opposite arm and leg.',
+    safetyNote: 'Keep the lower back gently connected to the floor.',
+    target: 'Core control',
+    alternative: 'Heel taps',
+    mediaType: 'none',
+    mediaUrl: '',
+    instructorCue: 'Keep the lower back gently connected to the floor.',
+    musclesWorked: ['Abs', 'Deep core'],
+  },
+  {
+    name: 'Wall Push-up',
+    duration: '10 reps',
+    instructions: 'Place hands on a wall, keep your body straight, bend your elbows, then press away.',
+    safetyNote: 'Move with control and keep the range pain-free.',
+    target: 'Chest + arms',
+    alternative: 'Wall lean hold',
+    mediaType: 'none',
+    mediaUrl: '',
+    instructorCue: 'Show elbows moving back at a comfortable angle.',
+    musclesWorked: ['Chest', 'Triceps', 'Shoulders'],
+  },
+  {
+    name: 'Glute Bridge',
+    duration: '12 reps',
+    instructions: 'Lie on your back, feet flat, squeeze your glutes, and lift your hips until your body forms a straight line.',
+    safetyNote: 'Do not arch the lower back at the top.',
+    target: 'Glutes',
+    alternative: 'Small hip lift',
+    mediaType: 'none',
+    mediaUrl: '',
+    instructorCue: 'Pause at the top without arching the lower back.',
+    musclesWorked: ['Glutes', 'Hamstrings', 'Core'],
+  },
+];
+
 export const dailyMission: Mission = {
-  id: 'beginner-cardio-boost',
-  title: 'Beginner Cardio Boost',
-  description: 'A friendly five-minute session for cardio, legs, and showing up today.',
-  durationMinutes: 5,
+  id: 'bodyweight-starter',
+  title: 'Bodyweight Starter',
+  description: 'A short full-body session focused on bodyweight basics: legs, glutes, core, and arms.',
+  durationMinutes: 7,
   difficulty: 'Beginner',
-  focus: 'Cardio + legs',
-  xpReward: 20,
+  focus: 'Full body',
+  xpReward: 25,
   type: 'Daily mission',
   equipment: ['No equipment'],
-  exercises: [
-    {
-      name: 'Arm Circles',
-      duration: '45 seconds',
-      instructions: 'Stand tall and move your arms in slow circles. Switch direction halfway.',
-      safetyNote: 'Keep the movement gentle and relaxed.',
-      target: 'Shoulders',
-      alternative: 'Shoulder rolls',
-    },
-    {
-      name: 'Step Jacks',
-      duration: '60 seconds',
-      instructions: 'Step one foot out at a time while raising your arms, then return to center.',
-      safetyNote: 'Use this low-impact version if jumping feels uncomfortable.',
-      target: 'Cardio',
-      alternative: 'March in place',
-    },
-    {
-      name: 'Chair Squats',
-      duration: '60 seconds',
-      instructions: 'Lower toward a chair, keep your chest lifted, and push through your heels.',
-      safetyNote: 'Stop above any painful range of motion.',
-      target: 'Legs',
-      alternative: 'Half squats',
-    },
-    {
-      name: 'Wall Push-ups',
-      duration: '60 seconds',
-      instructions: 'Place hands on a wall, keep a straight line, and bend your elbows slowly.',
-      safetyNote: 'Step closer to the wall to make it easier.',
-      target: 'Upper body',
-      alternative: 'Incline push-ups',
-    },
-    {
-      name: 'Calm Breathing',
-      duration: '75 seconds',
-      instructions: 'Breathe in through your nose for four counts and out slowly for six counts.',
-      safetyNote: 'Return to normal breathing if you feel lightheaded.',
-      target: 'Recovery',
-      alternative: 'Gentle neck stretches',
-    },
-  ],
+  exercises: starterExercises,
 };
 
 export const pathUnits: PathUnit[] = [
   {
     title: 'Unit 1: Start Moving',
-    summary: 'Tiny wins that make the habit easy to repeat.',
+    summary: 'Warm-up, breathing, and simple full-body wins.',
     lessons: [
-      {
-        id: 'show-up',
-        title: 'Show Up Session',
-        type: 'Workout',
-        durationMinutes: 1,
-        xpReward: 10,
-        difficulty: 'Easy',
-        state: 'current',
-      },
-      {
-        id: 'cardio-boost',
-        title: 'Beginner Cardio Boost',
-        type: 'Daily mission',
-        durationMinutes: 5,
-        xpReward: 20,
-        difficulty: 'Beginner',
-        state: 'locked',
-      },
-      {
-        id: 'mobility-reset',
-        title: 'Basic Mobility Reset',
-        type: 'Mobility',
-        durationMinutes: 5,
-        xpReward: 20,
-        difficulty: 'Beginner',
-        state: 'locked',
-      },
+      { id: 'show-up-warmup', title: 'Show Up Warm-up', type: 'Warm-up', durationMinutes: 3, xpReward: 10, difficulty: 'Easy', state: 'current' },
+      { id: 'bodyweight-starter', title: 'Bodyweight Starter', type: 'Full body', durationMinutes: 7, xpReward: 25, difficulty: 'Beginner', state: 'locked' },
+      { id: 'control-breathing', title: 'Control and Breathing', type: 'Technique', durationMinutes: 5, xpReward: 15, difficulty: 'Easy', state: 'locked' },
     ],
   },
   {
-    title: 'Unit 2: Build Control',
-    summary: 'Core, balance, and smooth technique.',
+    title: 'Unit 2: Legs and Glutes',
+    summary: 'Squats, bridges, lunges, and lower-body endurance.',
     lessons: [
-      {
-        id: 'core-basics',
-        title: 'Core Basics',
-        type: 'Strength',
-        durationMinutes: 7,
-        xpReward: 25,
-        difficulty: 'Beginner',
-        state: 'locked',
-      },
-      {
-        id: 'balance-line',
-        title: 'Balance Line',
-        type: 'Balance',
-        durationMinutes: 4,
-        xpReward: 15,
-        difficulty: 'Easy',
-        state: 'locked',
-      },
+      { id: 'glute-bridge-basics', title: 'Glute Bridge Basics', type: 'Glutes', durationMinutes: 6, xpReward: 20, difficulty: 'Beginner', state: 'locked' },
+      { id: 'squat-foundations', title: 'Squat Foundations', type: 'Legs', durationMinutes: 8, xpReward: 25, difficulty: 'Beginner', state: 'locked' },
+      { id: 'lunge-introduction', title: 'Lunge Introduction', type: 'Legs + glutes', durationMinutes: 9, xpReward: 30, difficulty: 'Beginner', state: 'locked' },
+    ],
+  },
+  {
+    title: 'Unit 3: Abs and Core',
+    summary: 'Core control before intensity: dead bugs, planks, and side strength.',
+    lessons: [
+      { id: 'deep-core-basics', title: 'Deep Core Basics', type: 'Abs', durationMinutes: 6, xpReward: 20, difficulty: 'Beginner', state: 'locked' },
+      { id: 'plank-builder', title: 'Plank Builder', type: 'Abs', durationMinutes: 7, xpReward: 25, difficulty: 'Beginner', state: 'locked' },
+      { id: 'core-circuit', title: 'Core Circuit', type: 'Abs circuit', durationMinutes: 9, xpReward: 30, difficulty: 'Beginner', state: 'locked' },
+    ],
+  },
+  {
+    title: 'Unit 4: Arms and Upper Body',
+    summary: 'Push-up progressions, triceps, shoulders, and plank stability.',
+    lessons: [
+      { id: 'wall-pushup-basics', title: 'Wall Push-up Basics', type: 'Arms', durationMinutes: 6, xpReward: 20, difficulty: 'Beginner', state: 'locked' },
+      { id: 'incline-push-strength', title: 'Incline Push Strength', type: 'Upper body', durationMinutes: 8, xpReward: 25, difficulty: 'Beginner', state: 'locked' },
+      { id: 'arms-core-combo', title: 'Arms and Core Combo', type: 'Arms + abs', durationMinutes: 9, xpReward: 30, difficulty: 'Beginner', state: 'locked' },
+    ],
+  },
+  {
+    title: 'Unit 5: Mobility and Review',
+    summary: 'Stretch, recover, and review the full bodyweight foundation.',
+    lessons: [
+      { id: 'back-hip-reset', title: 'Back and Hip Reset', type: 'Mobility', durationMinutes: 5, xpReward: 15, difficulty: 'Gentle', state: 'locked' },
+      { id: 'leg-stretch-flow', title: 'Leg Stretch Flow', type: 'Mobility', durationMinutes: 6, xpReward: 18, difficulty: 'Gentle', state: 'locked' },
+      { id: 'full-body-review', title: 'Full Body Review', type: 'Review', durationMinutes: 10, xpReward: 35, difficulty: 'Beginner', state: 'locked' },
     ],
   },
 ];
 
 export const practiceCategories: PracticeCategory[] = [
-  { title: 'Quick Cardio', focus: 'Energy', duration: '3 min', xp: 10, level: 'Easy' },
-  { title: 'Quick Strength', focus: 'Legs + upper body', duration: '5 min', xp: 15, level: 'Beginner' },
-  { title: 'Stretching', focus: 'Mobility', duration: '4 min', xp: 10, level: 'Easy' },
-  { title: 'Core Basics', focus: 'Stability', duration: '6 min', xp: 15, level: 'Beginner' },
-  { title: 'Recovery Reset', focus: 'Breathing + stretch', duration: '2 min', xp: 8, level: 'Gentle' },
-  { title: 'Sport Footwork', focus: 'Coordination', duration: '5 min', xp: 15, level: 'Beginner' },
+  { title: 'Core Quick Hit', focus: 'Abs', duration: '6 min', xp: 15, level: 'Beginner' },
+  { title: 'Glutes and Legs', focus: 'Glutes + legs', duration: '8 min', xp: 20, level: 'Beginner' },
+  { title: 'Arms Starter', focus: 'Arms + chest', duration: '7 min', xp: 18, level: 'Beginner' },
+  { title: 'Mobility Reset', focus: 'Hips + back', duration: '5 min', xp: 12, level: 'Gentle' },
+  { title: 'Plank Practice', focus: 'Abs + shoulders', duration: '5 min', xp: 15, level: 'Beginner' },
+  { title: 'Low Impact Sweat', focus: 'Full body', duration: '7 min', xp: 18, level: 'Easy' },
 ];
 
 export const achievements = [
   'First Workout Completed',
   '3-Day Streak',
   '7-Day Streak',
-  'Cardio Starter',
+  'Core Starter',
+  'Glute Builder',
   'No Equipment Hero',
-  'Weekend Warrior',
+  '100 XP Earned',
 ];
 
 export const weeklyActivity = [
-  { day: 'M', done: true },
-  { day: 'T', done: true },
-  { day: 'W', done: false },
-  { day: 'T', done: true },
-  { day: 'F', done: false },
   { day: 'S', done: false },
+  { day: 'M', done: false },
+  { day: 'T', done: false },
+  { day: 'W', done: false },
+  { day: 'T', done: false },
+  { day: 'F', done: false },
   { day: 'S', done: false },
 ];

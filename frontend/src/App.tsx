@@ -10,6 +10,7 @@ import Profile from './pages/Profile';
 import Path from './pages/Path';
 import Practice from './pages/Practice';
 import Progress from './pages/Progress';
+import Leaderboard from './pages/Leaderboard';
 import { LanguageProvider } from './i18n/LanguageContext';
 import './App.css';
 
@@ -27,6 +28,7 @@ const App: React.FC = () => {
           <Route path="/path" element={<Path />} />
           <Route path="/practice" element={<Practice />} />
           <Route path="/progress" element={<Progress />} />
+          <Route path="/leaderboard" element={<Leaderboard />} />
           <Route path="/profile" element={<Profile />} />
         </Routes>
       </Router>

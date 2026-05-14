@@ -9,6 +9,7 @@ import missionRoutes from './routes/missions';
 import streakRoutes from './routes/streaks';
 import leaderboardRoutes from './routes/leaderboard';
 import progressRoutes from './routes/progress';
+import goalsRoutes from './routes/goals';
 import { startReminderScheduler } from './services/reminders';
 
 dotenv.config();
@@ -35,6 +36,7 @@ app.use('/api/missions', missionRoutes);
 app.use('/api/streaks', streakRoutes);
 app.use('/api/leaderboard', leaderboardRoutes);
 app.use('/api/progress', progressRoutes);
+app.use('/api/goals', goalsRoutes);
 
 // Error handling middleware
 app.use((err: any, req: express.Request, res: express.Response, next: express.NextFunction) => {

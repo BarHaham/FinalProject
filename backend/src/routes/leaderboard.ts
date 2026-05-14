@@ -1,15 +1,27 @@
 import express from 'express';
 import pool from '../db/connection';
+import { authenticateToken } from '../middleware/auth';
 
 const router = express.Router();
+router.use(authenticateToken);
 
 // Get leaderboard for current week
 router.get('/current/:league', async (req, res) => {
   try {
     const { league } = req.params;
+    const now = new Date();
+    const sunday = new Date(now);
+    sunday.setDate(now.getDate() - now.getDay());
+    const weekStart = sunday.toISOString().split('T')[0];
+
     const result = await pool.query(
-      'SELECT l.*, u.name FROM leaderboard l JOIN users u ON l.user_id = u.id WHERE l.league = $1 ORDER BY l.rank_position ASC LIMIT 100',
-      [league]
+      `SELECT l.user_id, u.name, l.league, l.weekly_xp, l.rank_position
+       FROM leaderboard l
+       JOIN users u ON l.user_id = u.id
+       WHERE l.league = $1 AND l.week_start_date = $2
+       ORDER BY l.weekly_xp DESC
+       LIMIT 100`,
+      [league, weekStart]
     );
 
     res.json(result.rows);

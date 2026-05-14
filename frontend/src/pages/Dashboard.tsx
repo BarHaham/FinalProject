@@ -1,9 +1,8 @@
 import React, { useEffect, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import axios from 'axios';
 import AppShell from '../components/AppShell';
 import { LessonState, dailyMission as fallbackDailyMission, Mission, pathUnits, practiceCategories, weeklyActivity } from '../data/sportLingoData';
-import { apiUrl } from '../utils/api';
+import api from '../utils/api';
 import { getOnboardingProfile, getStoredUser, StoredUser } from '../utils/storage';
 import { formatText, useLanguage } from '../i18n/LanguageContext';
 
@@ -87,6 +86,7 @@ const Dashboard: React.FC = () => {
       state: lesson.state,
     }))
   );
+  const [weekDays, setWeekDays] = useState<boolean[]>(Array(7).fill(false));
   const onboarding = getOnboardingProfile();
   const { t, tv } = useLanguage();
 
@@ -98,19 +98,21 @@ const Dashboard: React.FC = () => {
     }
 
         setUser(storedUser);
-        axios.post(`${apiUrl}/users/${storedUser.id}/activity`).catch(() => undefined);
+        api.post(`/users/${storedUser.id}/activity`).catch(() => undefined);
 
     const fetchData = async () => {
       try {
-        const [streakResponse, progressResponse, missionResponse, pathResponse] = await Promise.all([
-          axios.get<Streak>(`${apiUrl}/streaks/${storedUser.id}`),
-          axios.get<ProgressSummary>(`${apiUrl}/progress/${storedUser.id}`),
-          axios.get(`${apiUrl}/missions/daily/${storedUser.id}`),
-          axios.get<ApiPathLesson[]>(`${apiUrl}/progress/${storedUser.id}/path`),
+        const [streakResponse, progressResponse, missionResponse, pathResponse, weeklyResponse] = await Promise.all([
+          api.get<Streak>(`/streaks/${storedUser.id}`),
+          api.get<ProgressSummary>(`/progress/${storedUser.id}`),
+          api.get(`/missions/daily/${storedUser.id}`),
+          api.get<ApiPathLesson[]>(`/progress/${storedUser.id}/path`),
+          api.get<{ days: boolean[] }>(`/missions/weekly/${storedUser.id}`),
         ]);
 
         setStreak(streakResponse.data);
         setProgress(progressResponse.data);
+        setWeekDays(weeklyResponse.data.days);
         setDailyMission({
           id: String(missionResponse.data.id),
           title: missionResponse.data.title,
@@ -141,6 +143,7 @@ const Dashboard: React.FC = () => {
     fetchData();
   }, [navigate]);
 
+  const daysActiveThisWeek = weekDays.filter(Boolean).length;
   const completedLessons = pathLessons.filter((lesson) => lesson.state === 'completed').length;
   const totalLessons = pathLessons.length;
   const pathProgress = Math.round((completedLessons / totalLessons) * 100);
@@ -173,7 +176,7 @@ const Dashboard: React.FC = () => {
             <div className="mt-5 grid grid-cols-7 gap-2">
               {weeklyActivity.map((day, index) => (
                 <div key={`${day.day}-${index}`} className="text-center">
-                  <div className={`mx-auto h-9 w-9 rounded-full border ${day.done ? 'border-success bg-success' : 'border-slate-200 bg-slate-100'}`} />
+                  <div className={`mx-auto h-9 w-9 rounded-full border ${weekDays[index] ? 'border-success bg-success' : 'border-slate-200 bg-slate-100'}`} />
                   <p className="mt-1 text-xs font-bold text-slate-500">{day.day}</p>
                 </div>
               ))}
@@ -246,6 +249,38 @@ const Dashboard: React.FC = () => {
           </div>
         </section>
 
+        <section className="grid gap-4 md:grid-cols-2">
+          <div className="rounded-md border border-slate-200 bg-white p-5 shadow-sm">
+            <div className="flex items-center justify-between">
+              <h3 className="text-xl font-black">{t('dashboard.weeklyGoal')}</h3>
+              <Link to="/progress" className="text-sm font-black text-primary">{t('nav.progress')}</Link>
+            </div>
+            <p className="mt-3 text-sm text-slate-500">{formatText(t('dashboard.daysActive'), { done: daysActiveThisWeek })}</p>
+            <div className="mt-3 h-3 rounded-full bg-slate-100">
+              <div className="h-full rounded-full bg-success transition-all" style={{ width: `${Math.round((daysActiveThisWeek / 7) * 100)}%` }} />
+            </div>
+            <div className="mt-4 grid grid-cols-7 gap-1">
+              {weeklyActivity.map((day, index) => (
+                <div key={`${day.day}-${index}`} className="text-center">
+                  <div className={`mx-auto h-6 w-6 rounded-full ${weekDays[index] ? 'bg-success' : 'bg-slate-100'}`} />
+                  <p className="mt-1 text-xs text-slate-500">{day.day}</p>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          <div className="rounded-md border border-slate-200 bg-white p-5 shadow-sm">
+            <div className="flex items-center justify-between">
+              <h3 className="text-xl font-black">{t('dashboard.leaderboard')}</h3>
+              <Link to="/leaderboard" className="text-sm font-black text-primary">{t('nav.leaderboard')}</Link>
+            </div>
+            <p className="mt-3 text-slate-600">{t('leaderboard.copy')}</p>
+            <Link to="/leaderboard" className="btn-primary mt-4 inline-flex">
+              {t('leaderboard.rankings')}
+            </Link>
+          </div>
+        </section>
+
         <section className="rounded-md border border-slate-200 bg-white p-5 shadow-sm">
           <div className="mb-4 flex items-center justify-between">
             <h3 className="text-xl font-black">{t('dashboard.recommended')}</h3>
@@ -253,7 +288,7 @@ const Dashboard: React.FC = () => {
           </div>
           <div className="grid gap-3 md:grid-cols-3">
             {practiceCategories.slice(0, 3).map((practice) => (
-              <Link key={practice.title} to="/mission" className="rounded-md border border-slate-200 p-4 transition hover:border-primary hover:shadow-sm">
+              <Link key={practice.title} to={`/mission?practice=${encodeURIComponent(practice.title)}`} className="rounded-md border border-slate-200 p-4 transition hover:border-primary hover:shadow-sm">
                 <p className="font-black">{tv(practice.title)}</p>
                 <p className="mt-1 text-sm text-slate-500">{practice.duration.replace('min', t('unit.min'))} · {tv(practice.focus)}</p>
               </Link>

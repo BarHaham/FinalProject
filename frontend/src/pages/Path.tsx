@@ -3,7 +3,7 @@ import { Link } from 'react-router-dom';
 import AppShell from '../components/AppShell';
 import { LessonState, PathUnit, pathUnits } from '../data/sportLingoData';
 import { useLanguage } from '../i18n/LanguageContext';
-import { apiUrl } from '../utils/api';
+import api from '../utils/api';
 import { getStoredUser } from '../utils/storage';
 
 type ApiPathLesson = {
@@ -19,17 +19,43 @@ type ApiPathLesson = {
   state: LessonState;
 };
 
+const sectionCopy: Record<number, { title: string; summary: string }> = {
+  1: {
+    title: 'Unit 1: Start Moving',
+    summary: 'Warm-up, breathing, and simple full-body wins.',
+  },
+  2: {
+    title: 'Unit 2: Legs and Glutes',
+    summary: 'Squats, bridges, lunges, and lower-body endurance.',
+  },
+  3: {
+    title: 'Unit 3: Abs and Core',
+    summary: 'Core control before intensity: dead bugs, planks, and side strength.',
+  },
+  4: {
+    title: 'Unit 4: Arms and Upper Body',
+    summary: 'Push-up progressions, triceps, shoulders, and plank stability.',
+  },
+  5: {
+    title: 'Unit 5: Mobility and Review',
+    summary: 'Stretch, recover, and review the full bodyweight foundation.',
+  },
+};
+
 const groupApiLessons = (lessons: ApiPathLesson[]): PathUnit[] => {
   const grouped = new Map<string, PathUnit>();
 
   for (const lesson of lessons) {
     const key = `${lesson.section_number}-${lesson.unit_number}`;
     if (!grouped.has(key)) {
+      const copy = sectionCopy[lesson.section_number] || {
+        title: `Unit ${lesson.section_number}: Bodyweight Training`,
+        summary: 'A focused bodyweight progression for strength, control, and consistency.',
+      };
+
       grouped.set(key, {
-        title: lesson.section_number === 1 ? 'Unit 1: Start Moving' : 'Unit 2: Build Control',
-        summary: lesson.section_number === 1
-          ? 'Tiny wins that make the habit easy to repeat.'
-          : 'Core, balance, and smooth technique.',
+        title: copy.title,
+        summary: copy.summary,
         lessons: [],
       });
     }
@@ -48,6 +74,89 @@ const groupApiLessons = (lessons: ApiPathLesson[]): PathUnit[] => {
   return Array.from(grouped.values());
 };
 
+const lessonNodeClass = (state: LessonState) => {
+  if (state === 'completed') return 'bg-success text-white ring-success/20';
+  if (state === 'current') return 'bg-primary text-white ring-primary/25';
+  return 'bg-slate-200 text-slate-500 ring-slate-200';
+};
+
+const lessonCardClass = (state: LessonState) => {
+  if (state === 'current') return 'border-primary bg-[#f7f3ff] shadow-md shadow-primary/10';
+  if (state === 'completed') return 'border-success/40 bg-white';
+  return 'border-slate-200 bg-slate-50';
+};
+
+const lessonIcon = (type: string) => {
+  const normalizedType = type.toLowerCase();
+  if (normalizedType.includes('warm')) return '🔥';
+  if (normalizedType.includes('glute')) return '🍑';
+  if (normalizedType.includes('leg')) return '🦵';
+  if (normalizedType.includes('abs') || normalizedType.includes('core')) return '💪';
+  if (normalizedType.includes('arm') || normalizedType.includes('upper')) return '🏋️';
+  if (normalizedType.includes('mobility')) return '🧘';
+  if (normalizedType.includes('review')) return '🏆';
+  if (normalizedType.includes('full')) return '⚡';
+  return '•';
+};
+
+const lessonNodeContent = (lesson: PathUnit['lessons'][number], index: number) => {
+  if (lesson.state === 'completed') return '✓';
+  if (lesson.state === 'current') return lessonIcon(lesson.type);
+  if (lesson.state === 'locked') return '🔒';
+  return index + 1;
+};
+
+const unitTheme = (title: string) => {
+  if (title.includes('Legs')) {
+    return {
+      icon: '🍑',
+      label: 'Lower body',
+      bg: 'bg-rose-50',
+      border: 'border-rose-200',
+      accent: 'bg-rose-500',
+      text: 'text-rose-700',
+    };
+  }
+  if (title.includes('Abs')) {
+    return {
+      icon: '💪',
+      label: 'Core',
+      bg: 'bg-amber-50',
+      border: 'border-amber-200',
+      accent: 'bg-amber-500',
+      text: 'text-amber-700',
+    };
+  }
+  if (title.includes('Arms')) {
+    return {
+      icon: '🏋️',
+      label: 'Upper body',
+      bg: 'bg-violet-50',
+      border: 'border-violet-200',
+      accent: 'bg-violet-500',
+      text: 'text-violet-700',
+    };
+  }
+  if (title.includes('Mobility')) {
+    return {
+      icon: '🧘',
+      label: 'Recovery',
+      bg: 'bg-emerald-50',
+      border: 'border-emerald-200',
+      accent: 'bg-emerald-500',
+      text: 'text-emerald-700',
+    };
+  }
+  return {
+    icon: '🔥',
+    label: 'Starter',
+    bg: 'bg-sky-50',
+    border: 'border-sky-200',
+    accent: 'bg-sky-500',
+    text: 'text-sky-700',
+  };
+};
+
 const Path: React.FC = () => {
   const { t, tv } = useLanguage();
   const [units, setUnits] = useState<PathUnit[]>(pathUnits);
@@ -60,10 +169,8 @@ const Path: React.FC = () => {
 
     const loadPath = async () => {
       try {
-        const response = await fetch(`${apiUrl}/progress/${user.id}/path`);
-        if (!response.ok) return;
-        const data = await response.json() as ApiPathLesson[];
-        setUnits(groupApiLessons(data));
+        const { data } = await api.get(`/progress/${user.id}/path`);
+        setUnits(groupApiLessons(data as ApiPathLesson[]));
       } catch {
         setUnits(pathUnits);
       }
@@ -103,30 +210,87 @@ const Path: React.FC = () => {
           </p>
         </section>
 
-        {units.map((unit) => (
-          <section key={unit.title} className="rounded-md border border-slate-200 bg-white p-5 shadow-sm">
-            <h3 className="text-2xl font-black">{tv(unit.title)}</h3>
-            <p className="mt-1 text-slate-600">{tv(unit.summary)}</p>
-            <div className="mt-5 grid gap-3">
-              {unit.lessons.map((lesson, index) => (
-                <div key={lesson.id} className="grid gap-3 rounded-md border border-slate-200 p-4 sm:grid-cols-[auto_1fr_auto] sm:items-center">
-                  <div className={`grid h-11 w-11 place-items-center rounded-full text-sm font-black ${lesson.state === 'locked' ? 'bg-slate-200 text-slate-500' : 'bg-primary text-white'}`}>
-                    {index + 1}
+        {units.map((unit) => {
+          const theme = unitTheme(unit.title);
+          const completedInUnit = unit.lessons.filter((lesson) => lesson.state === 'completed').length;
+          const unitXp = unit.lessons.reduce((total, lesson) => total + lesson.xpReward, 0);
+          const unitProgress = unit.lessons.length ? Math.round((completedInUnit / unit.lessons.length) * 100) : 0;
+
+          return (
+          <section key={unit.title} className={`overflow-hidden rounded-md border bg-white shadow-sm ${theme.border}`}>
+            <div className={`${theme.bg} border-b ${theme.border} p-5`}>
+              <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
+                <div className="flex gap-4">
+                  <div className={`grid h-14 w-14 shrink-0 place-items-center rounded-md ${theme.accent} text-3xl text-white shadow-sm`}>
+                    {theme.icon}
                   </div>
                   <div>
-                    <p className="font-black">{tv(lesson.title)}</p>
-                    <p className="text-sm text-slate-500">{tv(lesson.type)} · {lesson.durationMinutes} {t('unit.min')} · {tv(lesson.difficulty)} · {lesson.xpReward} XP</p>
+                    <div className="flex flex-wrap items-center gap-2">
+                      <h3 className="text-2xl font-black">{tv(unit.title)}</h3>
+                      <span className={`rounded-full bg-white px-3 py-1 text-xs font-black uppercase tracking-wide ${theme.text}`}>
+                        {theme.label}
+                      </span>
+                    </div>
+                    <p className="mt-1 text-slate-600">{tv(unit.summary)}</p>
                   </div>
-                  {lesson.state === 'current' ? (
-                    <Link to="/mission" className="btn-primary text-center">{t('nav.start')}</Link>
-                  ) : (
-                    <span className="rounded-full bg-slate-100 px-3 py-1 text-center text-sm font-black capitalize text-slate-500">{t(`state.${lesson.state}`)}</span>
-                  )}
+                </div>
+
+                <div className="grid grid-cols-2 gap-2 sm:min-w-56">
+                  <div className="rounded-md bg-white px-3 py-2 text-center shadow-sm">
+                    <p className="text-xs font-bold text-slate-500">Lessons</p>
+                    <p className="text-lg font-black text-slate-950">{completedInUnit}/{unit.lessons.length}</p>
+                  </div>
+                  <div className="rounded-md bg-white px-3 py-2 text-center shadow-sm">
+                    <p className="text-xs font-bold text-slate-500">XP</p>
+                    <p className="text-lg font-black text-slate-950">{unitXp}</p>
+                  </div>
+                </div>
+              </div>
+
+              <div className="mt-4 h-2 overflow-hidden rounded-full bg-white">
+                <div className={`h-full rounded-full ${theme.accent}`} style={{ width: `${unitProgress}%` }} />
+              </div>
+            </div>
+
+            <div className="p-5">
+            <div className="relative mt-6 max-w-3xl">
+              <div className="absolute bottom-8 left-7 top-8 w-1.5 rounded-full bg-slate-200 sm:left-8" aria-hidden="true" />
+              {unit.lessons.map((lesson, index) => (
+                <div key={lesson.id} className="relative z-10 flex gap-4 pb-8 last:pb-0">
+                  <div className="shrink-0">
+                    <div className={`grid h-16 w-16 place-items-center rounded-full text-xl font-black shadow-sm ring-8 ${lessonNodeClass(lesson.state)}`}>
+                      {lessonNodeContent(lesson, index)}
+                    </div>
+                  </div>
+
+                  <div className={`mt-1 grid flex-1 gap-3 rounded-md border px-4 py-3 transition sm:grid-cols-[1fr_auto] sm:items-center ${lessonCardClass(lesson.state)}`}>
+                    <div>
+                      <div className="flex flex-wrap items-center gap-2">
+                        <span className="text-xl" aria-hidden="true">{lessonIcon(lesson.type)}</span>
+                        <p className="font-black">{tv(lesson.title)}</p>
+                      </div>
+                      <div className="mt-2 flex flex-wrap gap-2">
+                        <span className="rounded-full bg-white px-3 py-1 text-xs font-black text-slate-600 shadow-sm">{tv(lesson.type)}</span>
+                        <span className="rounded-full bg-white px-3 py-1 text-xs font-black text-slate-600 shadow-sm">{lesson.durationMinutes} {t('unit.min')}</span>
+                        <span className="rounded-full bg-white px-3 py-1 text-xs font-black text-slate-600 shadow-sm">{tv(lesson.difficulty)}</span>
+                        <span className="rounded-full bg-white px-3 py-1 text-xs font-black text-primary shadow-sm">{lesson.xpReward} XP</span>
+                      </div>
+                    </div>
+                    {lesson.state === 'current' ? (
+                      <Link to="/mission" className="btn-primary text-center">{t('nav.start')}</Link>
+                    ) : lesson.state === 'completed' ? (
+                      <Link to="/mission" className="btn-secondary text-center">{t('mission.repeatWorkout')}</Link>
+                    ) : (
+                      <span className="rounded-full bg-white px-3 py-1 text-center text-sm font-black capitalize text-slate-500 shadow-sm">{t(`state.${lesson.state}`)}</span>
+                    )}
+                  </div>
                 </div>
               ))}
             </div>
+            </div>
           </section>
-        ))}
+          );
+        })}
       </div>
     </AppShell>
   );

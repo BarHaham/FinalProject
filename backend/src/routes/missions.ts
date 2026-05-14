@@ -2,8 +2,10 @@ import express from 'express';
 import pool from '../db/connection';
 import { beginnerDailyMission, practiceSessions } from '../data/content';
 import { calculateLevel, weekStartDate } from '../services/userState';
+import { authenticateToken } from '../middleware/auth';
 
 const router = express.Router();
+router.use(authenticateToken);
 
 const toDateOnly = (value: unknown) => {
   if (!value) return null;
@@ -26,14 +28,12 @@ const getCurrentPathLesson = async (userId: number) => {
   return result.rows[0] || null;
 };
 
-const createMissionForUser = async (userId: number) => {
+const getMissionTemplateForUser = async (userId: number) => {
   const currentLesson = await getCurrentPathLesson(userId);
-  const template = currentLesson
+  return currentLesson
     ? {
       title: currentLesson.lesson_name,
-      description: currentLesson.lesson_type === 'Workout'
-        ? 'A tiny first session to start your streak without pressure.'
-        : beginnerDailyMission.description,
+      description: 'Your next bodyweight lesson is ready.',
       durationMinutes: currentLesson.estimated_duration_minutes,
       difficultyLevel: currentLesson.difficulty,
       focusArea: currentLesson.lesson_type,
@@ -42,6 +42,10 @@ const createMissionForUser = async (userId: number) => {
       exercises: currentLesson.exercises || beginnerDailyMission.exercises,
     }
     : beginnerDailyMission;
+};
+
+const createMissionForUser = async (userId: number) => {
+  const template = await getMissionTemplateForUser(userId);
 
   const result = await pool.query(
     `INSERT INTO missions (
@@ -91,6 +95,37 @@ router.get('/daily/:userId', async (req, res) => {
     );
 
     if (existing.rows.length > 0) {
+      if (existing.rows[0].completed) {
+        const template = await getMissionTemplateForUser(userId);
+        const refreshed = await pool.query(
+          `UPDATE missions
+           SET title = $1,
+               description = $2,
+               duration_minutes = $3,
+               difficulty_level = $4,
+               focus_area = $5,
+               xp_reward = $6,
+               exercises = $7,
+               completed = FALSE,
+               completed_at = NULL,
+               updated_at = CURRENT_TIMESTAMP
+           WHERE id = $8
+           RETURNING *`,
+          [
+            template.title,
+            template.description,
+            template.durationMinutes,
+            template.difficultyLevel,
+            template.focusArea,
+            template.xpReward,
+            JSON.stringify(template.exercises),
+            existing.rows[0].id,
+          ]
+        );
+
+        return res.json(refreshed.rows[0]);
+      }
+
       return res.json(existing.rows[0]);
     }
 
@@ -106,11 +141,40 @@ router.get('/practice', (_req, res) => {
   res.json(practiceSessions);
 });
 
+// Get completed days this week (Sun=0 … Sat=6) for the weekly activity grid
+router.get('/weekly/:userId', async (req, res) => {
+  try {
+    const { userId } = req.params;
+    const now = new Date();
+    const sunday = new Date(now);
+    sunday.setDate(now.getDate() - now.getDay());
+    const weekStart = sunday.toISOString().split('T')[0];
+
+    const result = await pool.query(
+      `SELECT EXTRACT(DOW FROM completed_at) AS dow
+       FROM missions
+       WHERE user_id = $1
+         AND completed = TRUE
+         AND completed_at >= $2::date`,
+      [userId, weekStart]
+    );
+
+    const activeDays = new Set(result.rows.map((r: any) => Number(r.dow)));
+    const days = [0, 1, 2, 3, 4, 5, 6].map((d) => activeDays.has(d));
+    res.json({ days });
+  } catch (error: any) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
 // Get all missions for user
 router.get('/user/:userId', async (req, res) => {
   try {
     const { userId } = req.params;
-    const result = await pool.query('SELECT * FROM missions WHERE user_id = $1 ORDER BY created_at DESC', [userId]);
+    const result = await pool.query(
+      'SELECT * FROM missions WHERE user_id = $1 ORDER BY created_at DESC LIMIT 50',
+      [userId]
+    );
     res.json(result.rows);
   } catch (error: any) {
     res.status(500).json({ error: error.message });
@@ -270,7 +334,12 @@ router.post('/:missionId/complete', async (req, res) => {
     if (currentStreak >= 3) await unlockAchievement('3-Day Streak');
     if (currentStreak >= 7) await unlockAchievement('7-Day Streak');
     if (totalXp >= 100) await unlockAchievement('100 XP Earned');
-    if (String(mission.focus_area).toLowerCase().includes('cardio')) await unlockAchievement('Cardio Starter');
+    if (String(mission.focus_area).toLowerCase().includes('abs') || String(mission.focus_area).toLowerCase().includes('core')) {
+      await unlockAchievement('Core Starter');
+    }
+    if (String(mission.focus_area).toLowerCase().includes('glute') || String(mission.focus_area).toLowerCase().includes('legs')) {
+      await unlockAchievement('Glute Builder');
+    }
 
     const weekStart = weekStartDate();
     await client.query(

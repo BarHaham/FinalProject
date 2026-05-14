@@ -52,7 +52,7 @@ const Login: React.FC = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-secondary to-blue-900 flex items-center justify-center p-4">
+    <div className="flex min-h-screen items-start justify-center overflow-x-hidden bg-gradient-to-br from-secondary to-blue-900 p-4 py-6 sm:items-center">
       <div className="bg-white rounded-lg shadow-lg p-8 w-full max-w-md">
         <div className="fitlingo-avatar-logo mx-auto mb-6 h-24 w-24 rounded-full border-4 border-white bg-[#f6edff] shadow-md" />
         <h1 className="text-3xl font-bold text-center mb-8 text-secondary">FitLingo</h1>

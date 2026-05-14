@@ -1,8 +1,10 @@
 import express from 'express';
 import pool from '../db/connection';
 import bcrypt from 'bcryptjs';
+import { authenticateToken } from '../middleware/auth';
 
 const router = express.Router();
+router.use(authenticateToken);
 
 // Get user profile
 router.get('/:id', async (req, res) => {

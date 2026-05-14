@@ -18,7 +18,7 @@ const Practice: React.FC = () => {
 
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
         {practiceCategories.map((practice) => (
-          <Link key={practice.title} to="/mission" className="rounded-md border border-slate-200 bg-white p-5 shadow-sm transition hover:border-primary hover:shadow-md">
+          <Link key={practice.title} to={`/mission?practice=${encodeURIComponent(practice.title)}`} className="rounded-md border border-slate-200 bg-white p-5 shadow-sm transition hover:border-primary hover:shadow-md">
             <p className="text-sm font-black text-primary">{tv(practice.level)}</p>
             <h3 className="mt-2 text-xl font-black">{tv(practice.title)}</h3>
             <p className="mt-2 text-slate-600">{tv(practice.focus)}</p>

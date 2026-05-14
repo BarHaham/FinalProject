@@ -25,12 +25,1418 @@ body {
   background-repeat: no-repeat;
 }
 
+.jumping-jacks-demo {
+  position: relative;
+  display: grid;
+  place-items: center;
+  overflow: hidden;
+  background:
+    radial-gradient(circle at 25% 20%, rgba(255, 255, 255, 0.95), transparent 22%),
+    radial-gradient(circle at 78% 22%, rgba(255, 226, 121, 0.65), transparent 18%),
+    linear-gradient(135deg, #8b5cf6 0%, #22d3ee 48%, #34d399 100%);
+}
+
+.jj-paused .jj-figure,
+.jj-paused .jj-shadow,
+.jj-paused .jj-arm-left,
+.jj-paused .jj-arm-right,
+.jj-paused .jj-leg-left,
+.jj-paused .jj-leg-right {
+  animation-play-state: paused;
+}
+
+.jj-badge {
+  position: absolute;
+  left: 18px;
+  top: 16px;
+  border-radius: 999px;
+  background: rgba(15, 23, 42, 0.78);
+  color: #fff7ed;
+  font-size: 0.78rem;
+  font-weight: 900;
+  padding: 0.45rem 0.75rem;
+  text-transform: uppercase;
+}
+
+.jj-floor {
+  position: absolute;
+  bottom: 32px;
+  width: 62%;
+  height: 14px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.55);
+}
+
+.jj-figure {
+  position: relative;
+  width: 170px;
+  height: 235px;
+  animation: jj-hop 0.72s ease-in-out infinite;
+}
+
+.jj-shadow {
+  position: absolute;
+  left: 48px;
+  bottom: 2px;
+  width: 76px;
+  height: 16px;
+  border-radius: 999px;
+  background: rgba(15, 23, 42, 0.16);
+  animation: jj-shadow 0.72s ease-in-out infinite;
+}
+
+.jj-head {
+  position: absolute;
+  left: 58px;
+  top: 10px;
+  width: 56px;
+  height: 56px;
+  border: 5px solid #0f172a;
+  border-radius: 999px;
+  background: #fff7ed;
+  box-shadow: inset 12px -10px 0 rgba(251, 146, 60, 0.22);
+}
+
+.jj-body {
+  position: absolute;
+  left: 57px;
+  top: 70px;
+  width: 58px;
+  height: 78px;
+  border-radius: 24px 24px 18px 18px;
+  background: linear-gradient(180deg, #7c3aed, #14b8a6);
+  border: 5px solid #0f172a;
+}
+
+.jj-arm,
+.jj-leg {
+  position: absolute;
+  width: 18px;
+  border-radius: 999px;
+  background: #fff7ed;
+  border: 5px solid #0f172a;
+  transform-origin: top center;
+}
+
+.jj-arm {
+  top: 76px;
+  height: 88px;
+}
+
+.jj-arm-left {
+  left: 54px;
+  animation: jj-arm-left 0.72s ease-in-out infinite;
+}
+
+.jj-arm-right {
+  right: 54px;
+  animation: jj-arm-right 0.72s ease-in-out infinite;
+}
+
+.jj-leg {
+  top: 138px;
+  height: 90px;
+}
+
+.jj-leg-left {
+  left: 67px;
+  animation: jj-leg-left 0.72s ease-in-out infinite;
+}
+
+.jj-leg-right {
+  right: 67px;
+  animation: jj-leg-right 0.72s ease-in-out infinite;
+}
+
+.arm-circles-demo {
+  position: relative;
+  display: grid;
+  place-items: center;
+  overflow: hidden;
+  background:
+    radial-gradient(circle at 18% 22%, rgba(255, 255, 255, 0.88), transparent 24%),
+    radial-gradient(circle at 82% 18%, rgba(255, 218, 97, 0.58), transparent 18%),
+    linear-gradient(135deg, #06b6d4 0%, #34d399 48%, #f59e0b 100%);
+}
+
+.ac-badge {
+  position: absolute;
+  left: 18px;
+  top: 16px;
+  border-radius: 999px;
+  background: rgba(15, 23, 42, 0.78);
+  color: #fff7ed;
+  font-size: 0.78rem;
+  font-weight: 900;
+  padding: 0.45rem 0.75rem;
+  text-transform: uppercase;
+}
+
+.ac-floor {
+  position: absolute;
+  bottom: 34px;
+  width: 58%;
+  height: 14px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.55);
+}
+
+.ac-halo {
+  position: absolute;
+  top: 20px;
+  width: 166px;
+  height: 166px;
+  border: 7px dashed rgba(255, 255, 255, 0.62);
+  border-radius: 999px;
+  animation: ac-spin 1.55s linear infinite;
+}
+
+.ac-halo-left {
+  left: -4px;
+}
+
+.ac-halo-right {
+  right: -4px;
+}
+
+.ac-figure {
+  position: relative;
+  width: 220px;
+  height: 235px;
+}
+
+.ac-head {
+  position: absolute;
+  left: 82px;
+  top: 18px;
+  width: 56px;
+  height: 56px;
+  border: 5px solid #0f172a;
+  border-radius: 999px;
+  background: #fff7ed;
+  box-shadow: inset 13px -10px 0 rgba(20, 184, 166, 0.2);
+  z-index: 5;
+}
+
+.ac-body {
+  position: absolute;
+  left: 80px;
+  top: 78px;
+  width: 60px;
+  height: 82px;
+  border: 5px solid #0f172a;
+  border-radius: 24px 24px 18px 18px;
+  background: linear-gradient(180deg, #7c3aed, #22c55e);
+  z-index: 4;
+}
+
+.ac-arm {
+  position: absolute;
+  top: 101px;
+  width: 82px;
+  height: 18px;
+  border: 5px solid #0f172a;
+  border-radius: 999px;
+  background: #fff7ed;
+  z-index: 3;
+}
+
+.ac-arm span {
+  position: absolute;
+  top: -13px;
+  width: 26px;
+  height: 26px;
+  border: 5px solid #0f172a;
+  border-radius: 999px;
+  background: #fff7ed;
+}
+
+.ac-arm-left {
+  left: -2px;
+  transform-origin: right center;
+  animation: ac-arm-left 1.55s linear infinite;
+}
+
+.ac-arm-left span {
+  left: -18px;
+}
+
+.ac-arm-right {
+  right: -2px;
+  transform-origin: left center;
+  animation: ac-arm-right 1.55s linear infinite;
+}
+
+.ac-arm-right span {
+  right: -18px;
+}
+
+.ac-leg {
+  position: absolute;
+  top: 150px;
+  width: 18px;
+  height: 78px;
+  border: 5px solid #0f172a;
+  border-radius: 999px;
+  background: #fff7ed;
+}
+
+.ac-leg-left {
+  left: 86px;
+  transform: rotate(8deg);
+}
+
+.ac-leg-right {
+  right: 86px;
+  transform: rotate(-8deg);
+}
+
+.ac-paused .ac-halo,
+.ac-paused .ac-arm-left,
+.ac-paused .ac-arm-right {
+  animation-play-state: paused;
+}
+
+.rest-demo {
+  position: relative;
+  display: grid;
+  place-items: center;
+  overflow: hidden;
+  background:
+    radial-gradient(circle at 28% 20%, rgba(255, 255, 255, 0.86), transparent 22%),
+    linear-gradient(135deg, #e0f2fe 0%, #ccfbf1 52%, #fef3c7 100%);
+}
+
+.rest-pulse {
+  position: absolute;
+  width: 168px;
+  height: 168px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.7);
+  box-shadow: 0 0 0 22px rgba(34, 211, 238, 0.15);
+  animation: rest-breathe 2s ease-in-out infinite;
+}
+
+.rest-card {
+  position: relative;
+  width: min(320px, 82%);
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.78);
+  padding: 1.4rem;
+  text-align: center;
+  box-shadow: 0 18px 50px rgba(15, 23, 42, 0.16);
+}
+
+.hip-openers-demo {
+  position: relative;
+  display: grid;
+  place-items: center;
+  overflow: hidden;
+  background:
+    radial-gradient(circle at 24% 20%, rgba(255, 255, 255, 0.88), transparent 22%),
+    radial-gradient(circle at 80% 24%, rgba(255, 226, 121, 0.56), transparent 18%),
+    linear-gradient(135deg, #38bdf8 0%, #2dd4bf 48%, #84cc16 100%);
+}
+
+.ho-badge {
+  position: absolute;
+  left: 18px;
+  top: 16px;
+  border-radius: 999px;
+  background: rgba(15, 23, 42, 0.78);
+  color: #fff7ed;
+  font-size: 0.78rem;
+  font-weight: 900;
+  padding: 0.45rem 0.75rem;
+  text-transform: uppercase;
+}
+
+.ho-floor {
+  position: absolute;
+  bottom: 32px;
+  width: 58%;
+  height: 14px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.58);
+}
+
+.ho-figure {
+  position: relative;
+  width: 190px;
+  height: 238px;
+}
+
+.ho-shadow {
+  position: absolute;
+  left: 56px;
+  bottom: 2px;
+  width: 82px;
+  height: 16px;
+  border-radius: 999px;
+  background: rgba(15, 23, 42, 0.16);
+}
+
+.ho-head {
+  position: absolute;
+  left: 66px;
+  top: 12px;
+  width: 56px;
+  height: 56px;
+  border: 5px solid #0f172a;
+  border-radius: 999px;
+  background: #fff7ed;
+  box-shadow: inset 13px -10px 0 rgba(45, 212, 191, 0.2);
+}
+
+.ho-body {
+  position: absolute;
+  left: 64px;
+  top: 72px;
+  width: 60px;
+  height: 84px;
+  border: 5px solid #0f172a;
+  border-radius: 24px 24px 18px 18px;
+  background: linear-gradient(180deg, #7c3aed, #14b8a6);
+  animation: ho-balance 1.25s ease-in-out infinite;
+}
+
+.ho-arm {
+  position: absolute;
+  top: 88px;
+  width: 18px;
+  height: 78px;
+  border: 5px solid #0f172a;
+  border-radius: 999px;
+  background: #fff7ed;
+  transform-origin: top center;
+}
+
+.ho-arm-left {
+  left: 56px;
+  transform: rotate(20deg);
+}
+
+.ho-arm-right {
+  right: 56px;
+  transform: rotate(-20deg);
+}
+
+.ho-leg,
+.ho-foot {
+  position: absolute;
+  border: 5px solid #0f172a;
+  border-radius: 999px;
+  background: #fff7ed;
+}
+
+.ho-leg {
+  top: 146px;
+  width: 18px;
+  height: 86px;
+  transform-origin: top center;
+}
+
+.ho-leg-stand {
+  left: 83px;
+  transform: rotate(4deg);
+}
+
+.ho-leg-lift {
+  left: 98px;
+  height: 74px;
+  animation: ho-leg-open 1.25s ease-in-out infinite;
+}
+
+.ho-foot {
+  width: 42px;
+  height: 18px;
+}
+
+.ho-foot-stand {
+  left: 73px;
+  bottom: 0;
+}
+
+.ho-foot-lift {
+  left: 122px;
+  top: 156px;
+  animation: ho-foot-open 1.25s ease-in-out infinite;
+}
+
+.ho-paused .ho-body,
+.ho-paused .ho-leg-lift,
+.ho-paused .ho-foot-lift {
+  animation-play-state: paused;
+}
+
+.ho-sequence {
+  position: relative;
+  display: grid;
+  width: min(720px, 88%);
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 18px;
+}
+
+.ho-pose {
+  position: relative;
+  height: 205px;
+  border: 4px solid rgba(255, 255, 255, 0.56);
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.22);
+  box-shadow: inset 0 -18px 0 rgba(255, 255, 255, 0.22);
+}
+
+.ho-pose-1 {
+  animation: ho-step-highlight 3s ease-in-out infinite;
+}
+
+.ho-pose-2 {
+  animation: ho-step-highlight 3s ease-in-out infinite 1s;
+}
+
+.ho-pose-3 {
+  animation: ho-step-highlight 3s ease-in-out infinite 2s;
+}
+
+.ho-mini-head {
+  position: absolute;
+  left: calc(50% - 22px);
+  top: 18px;
+  width: 44px;
+  height: 44px;
+  border: 5px solid #0f172a;
+  border-radius: 999px;
+  background: #fff7ed;
+}
+
+.ho-mini-body {
+  position: absolute;
+  left: calc(50% - 24px);
+  top: 64px;
+  width: 48px;
+  height: 62px;
+  border: 5px solid #0f172a;
+  border-radius: 22px 22px 16px 16px;
+  background: linear-gradient(180deg, #7c3aed, #14b8a6);
+}
+
+.ho-mini-arm,
+.ho-mini-leg {
+  position: absolute;
+  width: 16px;
+  border: 5px solid #0f172a;
+  border-radius: 999px;
+  background: #fff7ed;
+  transform-origin: top center;
+}
+
+.ho-mini-arm {
+  top: 74px;
+  height: 58px;
+}
+
+.ho-mini-arm-left {
+  left: calc(50% - 42px);
+  transform: rotate(20deg);
+}
+
+.ho-mini-arm-right {
+  right: calc(50% - 42px);
+  transform: rotate(-20deg);
+}
+
+.ho-mini-leg {
+  top: 120px;
+  height: 64px;
+}
+
+.ho-mini-stand {
+  left: calc(50% - 9px);
+  transform: rotate(2deg);
+}
+
+.ho-mini-lift-front {
+  left: calc(50% + 8px);
+  height: 54px;
+  transform: rotate(-64deg);
+}
+
+.ho-mini-open-side {
+  left: calc(50% + 18px);
+  height: 56px;
+  transform: rotate(-98deg);
+}
+
+.ho-mini-return {
+  left: calc(50% + 10px);
+  height: 56px;
+  transform: rotate(-34deg);
+}
+
+.ho-mini-label {
+  position: absolute;
+  left: 50%;
+  bottom: 12px;
+  transform: translateX(-50%);
+  border-radius: 999px;
+  background: rgba(15, 23, 42, 0.78);
+  color: #fff7ed;
+  font-size: 0.78rem;
+  font-weight: 900;
+  padding: 0.35rem 0.7rem;
+  text-transform: uppercase;
+}
+
+.ho-paused .ho-pose-1,
+.ho-paused .ho-pose-2,
+.ho-paused .ho-pose-3 {
+  animation-play-state: paused;
+}
+
+.lower-body-demo {
+  position: relative;
+  display: grid;
+  place-items: center;
+  overflow: hidden;
+  background:
+    radial-gradient(circle at 24% 18%, rgba(255, 255, 255, 0.9), transparent 22%),
+    radial-gradient(circle at 82% 24%, rgba(255, 218, 97, 0.52), transparent 18%),
+    linear-gradient(135deg, #22c55e 0%, #2dd4bf 48%, #7c3aed 100%);
+}
+
+.lb-badge,
+.lb-cue {
+  position: absolute;
+  z-index: 5;
+  border-radius: 999px;
+  background: rgba(15, 23, 42, 0.78);
+  color: #fff7ed;
+  font-size: 0.78rem;
+  font-weight: 900;
+  padding: 0.45rem 0.75rem;
+  text-transform: uppercase;
+}
+
+.lb-badge {
+  left: 18px;
+  top: 16px;
+}
+
+.lb-cue-left {
+  left: 18px;
+  bottom: 16px;
+}
+
+.lb-cue-right {
+  right: 18px;
+  bottom: 16px;
+}
+
+.lb-scene {
+  position: relative;
+  width: 330px;
+  height: 235px;
+}
+
+.lb-mat {
+  position: absolute;
+  left: 42px;
+  right: 42px;
+  bottom: 18px;
+  height: 14px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.6);
+}
+
+.lb-wall {
+  display: none;
+  position: absolute;
+  right: 60px;
+  top: 42px;
+  width: 18px;
+  height: 154px;
+  border-radius: 999px;
+  background: rgba(15, 23, 42, 0.18);
+}
+
+.lb-figure {
+  position: absolute;
+  left: 120px;
+  top: 12px;
+  width: 120px;
+  height: 210px;
+}
+
+.lb-shadow {
+  position: absolute;
+  left: 18px;
+  bottom: 2px;
+  width: 86px;
+  height: 16px;
+  border-radius: 999px;
+  background: rgba(15, 23, 42, 0.16);
+}
+
+.lb-head {
+  position: absolute;
+  left: 34px;
+  top: 4px;
+  width: 52px;
+  height: 52px;
+  border: 5px solid #0f172a;
+  border-radius: 999px;
+  background: #fff7ed;
+  box-shadow: inset 12px -10px 0 rgba(45, 212, 191, 0.2);
+}
+
+.lb-body {
+  position: absolute;
+  left: 32px;
+  top: 60px;
+  width: 58px;
+  height: 72px;
+  border: 5px solid #0f172a;
+  border-radius: 24px 24px 18px 18px;
+  background: linear-gradient(180deg, #7c3aed, #14b8a6);
+  transform-origin: bottom center;
+}
+
+.lb-arm,
+.lb-thigh,
+.lb-shin,
+.lb-foot {
+  position: absolute;
+  border: 5px solid #0f172a;
+  border-radius: 999px;
+  background: #fff7ed;
+}
+
+.lb-arm {
+  top: 76px;
+  width: 16px;
+  height: 66px;
+  transform-origin: top center;
+}
+
+.lb-arm-left {
+  left: 24px;
+  transform: rotate(20deg);
+}
+
+.lb-arm-right {
+  right: 24px;
+  transform: rotate(-20deg);
+}
+
+.lb-thigh,
+.lb-shin {
+  width: 16px;
+  height: 56px;
+  transform-origin: top center;
+}
+
+.lb-thigh {
+  top: 124px;
+}
+
+.lb-thigh-left {
+  left: 42px;
+  transform: rotate(9deg);
+}
+
+.lb-thigh-right {
+  right: 42px;
+  transform: rotate(-9deg);
+}
+
+.lb-shin {
+  top: 165px;
+}
+
+.lb-shin-left {
+  left: 38px;
+  transform: rotate(6deg);
+}
+
+.lb-shin-right {
+  right: 38px;
+  transform: rotate(-6deg);
+}
+
+.lb-foot {
+  bottom: 0;
+  width: 42px;
+  height: 16px;
+}
+
+.lb-foot-left {
+  left: 28px;
+}
+
+.lb-foot-right {
+  right: 28px;
+}
+
+.lower-chair-squat .lb-figure {
+  animation: lb-squat-body 1.45s ease-in-out infinite;
+}
+
+.lower-chair-squat .lb-body {
+  animation: lb-squat-torso 1.45s ease-in-out infinite;
+}
+
+.lower-chair-squat .lb-thigh-left,
+.lower-chair-squat .lb-thigh-right {
+  animation: lb-squat-thigh 1.45s ease-in-out infinite;
+}
+
+.lower-chair-squat .lb-shin-left,
+.lower-chair-squat .lb-shin-right {
+  animation: lb-squat-shin 1.45s ease-in-out infinite;
+}
+
+.lower-glute-bridge .lb-scene {
+  transform: translateY(22px);
+}
+
+.lower-glute-bridge .lb-head {
+  left: 6px;
+  top: 116px;
+}
+
+.lower-glute-bridge .lb-body {
+  left: 50px;
+  top: 125px;
+  width: 112px;
+  height: 34px;
+  transform-origin: left center;
+  animation: lb-bridge-body 1.4s ease-in-out infinite;
+}
+
+.lower-glute-bridge .lb-arm {
+  top: 150px;
+  height: 54px;
+  transform: rotate(86deg);
+}
+
+.lower-glute-bridge .lb-arm-left {
+  left: 32px;
+}
+
+.lower-glute-bridge .lb-arm-right {
+  right: -56px;
+}
+
+.lower-glute-bridge .lb-thigh {
+  top: 132px;
+  height: 64px;
+}
+
+.lower-glute-bridge .lb-thigh-left {
+  left: 136px;
+  transform: rotate(-42deg);
+  animation: lb-bridge-leg 1.4s ease-in-out infinite;
+}
+
+.lower-glute-bridge .lb-thigh-right {
+  right: -46px;
+  transform: rotate(-42deg);
+  animation: lb-bridge-leg 1.4s ease-in-out infinite;
+}
+
+.lower-glute-bridge .lb-shin {
+  top: 166px;
+  height: 52px;
+}
+
+.lower-glute-bridge .lb-shin-left {
+  left: 178px;
+}
+
+.lower-glute-bridge .lb-shin-right {
+  right: -88px;
+}
+
+.lower-reverse-lunge .lb-thigh-left,
+.lower-reverse-lunge .lb-shin-left,
+.lower-reverse-lunge .lb-foot-left {
+  animation: lb-lunge-front 1.5s ease-in-out infinite;
+}
+
+.lower-reverse-lunge .lb-thigh-right {
+  animation: lb-lunge-back-thigh 1.5s ease-in-out infinite;
+}
+
+.lower-reverse-lunge .lb-shin-right,
+.lower-reverse-lunge .lb-foot-right {
+  animation: lb-lunge-back-shin 1.5s ease-in-out infinite;
+}
+
+.lower-reverse-lunge .lb-body {
+  animation: lb-lunge-body 1.5s ease-in-out infinite;
+}
+
+.lower-wall-sit .lb-wall {
+  display: block;
+}
+
+.lower-wall-sit .lb-figure {
+  animation: lb-wall-sit 2s ease-in-out infinite;
+}
+
+.lower-wall-sit .lb-body {
+  transform: rotate(-8deg);
+}
+
+.lower-wall-sit .lb-thigh-left,
+.lower-wall-sit .lb-thigh-right {
+  transform: rotate(86deg);
+}
+
+.lower-wall-sit .lb-shin-left,
+.lower-wall-sit .lb-shin-right {
+  transform: translateY(18px) rotate(0deg);
+}
+
+.lower-calf-raise .lb-figure {
+  animation: lb-calf-rise 1.2s ease-in-out infinite;
+}
+
+.lower-calf-raise .lb-foot-left,
+.lower-calf-raise .lb-foot-right {
+  animation: lb-calf-foot 1.2s ease-in-out infinite;
+}
+
+.lb-paused .lb-figure,
+.lb-paused .lb-body,
+.lb-paused .lb-thigh,
+.lb-paused .lb-shin,
+.lb-paused .lb-foot {
+  animation-play-state: paused;
+}
+
+.sequence-demo {
+  position: relative;
+  display: grid;
+  place-items: center;
+  overflow: hidden;
+  background:
+    radial-gradient(circle at 22% 18%, rgba(255, 255, 255, 0.9), transparent 22%),
+    radial-gradient(circle at 82% 22%, rgba(255, 218, 97, 0.52), transparent 18%),
+    linear-gradient(135deg, #7c3aed 0%, #22d3ee 48%, #34d399 100%);
+}
+
+.sd-badge,
+.sd-focus {
+  position: absolute;
+  border-radius: 999px;
+  background: rgba(15, 23, 42, 0.78);
+  color: #fff7ed;
+  font-size: 0.78rem;
+  font-weight: 900;
+  padding: 0.45rem 0.75rem;
+  text-transform: uppercase;
+}
+
+.sd-badge {
+  left: 18px;
+  top: 16px;
+}
+
+.sd-focus {
+  right: 18px;
+  top: 16px;
+}
+
+.sd-track {
+  display: grid;
+  width: min(760px, 90%);
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 18px;
+}
+
+.sd-step {
+  position: relative;
+  min-height: 204px;
+  border: 4px solid rgba(255, 255, 255, 0.52);
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.2);
+  box-shadow: inset 0 -16px 0 rgba(255, 255, 255, 0.22);
+  animation: sd-step-highlight 3s ease-in-out infinite;
+}
+
+.sd-step-2 {
+  animation-delay: 1s;
+}
+
+.sd-step-3 {
+  animation-delay: 2s;
+}
+
+.sd-paused .sd-step {
+  animation-play-state: paused;
+}
+
+.sd-figure {
+  position: relative;
+  height: 142px;
+  transition: transform 0.3s ease;
+}
+
+.sd-step-1 .sd-figure {
+  animation: sd-pose-ready 3s ease-in-out infinite;
+}
+
+.sd-step-2 .sd-figure {
+  animation: sd-pose-move 3s ease-in-out infinite 1s;
+}
+
+.sd-step-3 .sd-figure {
+  animation: sd-pose-hold 3s ease-in-out infinite 2s;
+}
+
+.sd-paused .sd-figure {
+  animation-play-state: paused;
+}
+
+.sd-head {
+  position: absolute;
+  left: calc(50% - 18px);
+  top: 14px;
+  width: 36px;
+  height: 36px;
+  border: 4px solid #0f172a;
+  border-radius: 999px;
+  background: #fff7ed;
+}
+
+.sd-body {
+  position: absolute;
+  left: calc(50% - 20px);
+  top: 52px;
+  width: 40px;
+  height: 54px;
+  border: 4px solid #0f172a;
+  border-radius: 18px 18px 14px 14px;
+  background: linear-gradient(180deg, #7c3aed, #14b8a6);
+}
+
+.sd-limb {
+  position: absolute;
+  width: 13px;
+  border: 4px solid #0f172a;
+  border-radius: 999px;
+  background: #fff7ed;
+  transform-origin: top center;
+}
+
+.sd-arm {
+  top: 60px;
+  height: 48px;
+}
+
+.sd-arm-left {
+  left: calc(50% - 34px);
+  transform: rotate(22deg);
+}
+
+.sd-arm-right {
+  right: calc(50% - 34px);
+  transform: rotate(-22deg);
+}
+
+.sd-leg {
+  top: 100px;
+  height: 44px;
+}
+
+.sd-leg-left {
+  left: calc(50% - 12px);
+  transform: rotate(8deg);
+}
+
+.sd-leg-right {
+  right: calc(50% - 12px);
+  transform: rotate(-8deg);
+}
+
+.sd-step-2 .sd-head {
+  transform: translateY(8px);
+}
+
+.sd-step-2 .sd-body {
+  transform: translateY(12px);
+}
+
+.sd-step-2 .sd-arm-left {
+  transform: rotate(44deg);
+}
+
+.sd-step-2 .sd-arm-right {
+  transform: rotate(-44deg);
+}
+
+.sd-step-2 .sd-leg-left {
+  transform: rotate(28deg);
+}
+
+.sd-step-2 .sd-leg-right {
+  transform: rotate(-28deg);
+}
+
+.sd-step-3 .sd-head {
+  transform: translateY(18px);
+}
+
+.sd-step-3 .sd-body {
+  transform: translateY(24px);
+}
+
+.sd-step-3 .sd-arm-left {
+  transform: rotate(30deg);
+}
+
+.sd-step-3 .sd-arm-right {
+  transform: rotate(-30deg);
+}
+
+.sd-step-3 .sd-leg-left {
+  height: 34px;
+  transform: translateY(18px) rotate(58deg);
+}
+
+.sd-step-3 .sd-leg-right {
+  height: 34px;
+  transform: translateY(18px) rotate(-58deg);
+}
+
+.sd-step-1 .sd-head,
+.sd-step-1 .sd-body,
+.sd-step-1 .sd-limb {
+  transition: transform 0.3s ease, height 0.3s ease;
+}
+
+.sd-step-2 .sd-head,
+.sd-step-2 .sd-body,
+.sd-step-2 .sd-limb,
+.sd-step-3 .sd-head,
+.sd-step-3 .sd-body,
+.sd-step-3 .sd-limb {
+  transition: transform 0.3s ease, height 0.3s ease;
+}
+
+.sd-label {
+  text-align: center;
+  font-size: 0.92rem;
+  font-weight: 900;
+  color: #0f172a;
+}
+
+.sd-cue {
+  margin-top: 0.15rem;
+  padding: 0 0.45rem;
+  text-align: center;
+  font-size: 0.76rem;
+  font-weight: 800;
+  color: rgba(15, 23, 42, 0.72);
+}
+
 @keyframes mascot-bob {
   from {
     margin-top: 0;
   }
   to {
     margin-top: 12px;
+  }
+}
+
+@keyframes jj-hop {
+  0%, 100% {
+    transform: translateY(10px);
+  }
+  50% {
+    transform: translateY(-4px);
+  }
+}
+
+@keyframes jj-shadow {
+  0%, 100% {
+    transform: scaleX(1.08);
+    opacity: 0.2;
+  }
+  50% {
+    transform: scaleX(0.82);
+    opacity: 0.11;
+  }
+}
+
+@keyframes jj-arm-left {
+  0%, 100% {
+    transform: rotate(56deg);
+  }
+  50% {
+    transform: rotate(-138deg);
+  }
+}
+
+@keyframes jj-arm-right {
+  0%, 100% {
+    transform: rotate(-56deg);
+  }
+  50% {
+    transform: rotate(138deg);
+  }
+}
+
+@keyframes jj-leg-left {
+  0%, 100% {
+    transform: rotate(8deg);
+  }
+  50% {
+    transform: rotate(34deg);
+  }
+}
+
+@keyframes jj-leg-right {
+  0%, 100% {
+    transform: rotate(-8deg);
+  }
+  50% {
+    transform: rotate(-34deg);
+  }
+}
+
+@keyframes ac-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+@keyframes ac-arm-left {
+  0% {
+    transform: rotate(0deg);
+  }
+  100% {
+    transform: rotate(-360deg);
+  }
+}
+
+@keyframes ac-arm-right {
+  0% {
+    transform: rotate(0deg);
+  }
+  100% {
+    transform: rotate(360deg);
+  }
+}
+
+@keyframes rest-breathe {
+  0%, 100% {
+    transform: scale(0.86);
+    opacity: 0.64;
+  }
+  50% {
+    transform: scale(1.08);
+    opacity: 1;
+  }
+}
+
+@keyframes ho-balance {
+  0%, 100% {
+    transform: translateX(0);
+  }
+  50% {
+    transform: translateX(-4px);
+  }
+}
+
+@keyframes ho-leg-open {
+  0%, 100% {
+    transform: rotate(10deg);
+  }
+  45% {
+    transform: rotate(-64deg);
+  }
+  70% {
+    transform: rotate(-42deg);
+  }
+}
+
+@keyframes ho-foot-open {
+  0%, 100% {
+    transform: translate(0, 0) rotate(6deg);
+  }
+  45% {
+    transform: translate(0, -52px) rotate(-10deg);
+  }
+  70% {
+    transform: translate(6px, -36px) rotate(-2deg);
+  }
+}
+
+@keyframes ho-step-highlight {
+  0%, 28%, 100% {
+    transform: translateY(0) scale(1);
+    border-color: rgba(255, 255, 255, 0.56);
+  }
+  12% {
+    transform: translateY(-8px) scale(1.04);
+    border-color: rgba(255, 247, 237, 0.95);
+  }
+}
+
+@keyframes sd-step-highlight {
+  0%, 28%, 100% {
+    transform: translateY(0) scale(1);
+    border-color: rgba(255, 255, 255, 0.52);
+  }
+  12% {
+    transform: translateY(-8px) scale(1.04);
+    border-color: rgba(255, 247, 237, 0.96);
+  }
+}
+
+@keyframes sd-pose-ready {
+  0%, 30%, 100% {
+    transform: translateY(0) scale(1);
+  }
+  12% {
+    transform: translateY(-5px) scale(1.04);
+  }
+}
+
+@keyframes sd-pose-move {
+  0%, 30%, 100% {
+    transform: translateY(0) scale(1);
+  }
+  12% {
+    transform: translateY(8px) scale(1.04);
+  }
+}
+
+@keyframes sd-pose-hold {
+  0%, 30%, 100% {
+    transform: translateY(0) scale(1);
+  }
+  12% {
+    transform: translateY(12px) scale(1.04);
+  }
+}
+
+@keyframes lb-squat-body {
+  0%, 100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(32px);
+  }
+}
+
+@keyframes lb-squat-torso {
+  0%, 100% {
+    transform: rotate(0deg);
+  }
+  50% {
+    transform: rotate(-12deg);
+  }
+}
+
+@keyframes lb-squat-thigh {
+  0%, 100% {
+    transform: rotate(9deg);
+  }
+  50% {
+    transform: rotate(68deg);
+  }
+}
+
+@keyframes lb-squat-shin {
+  0%, 100% {
+    transform: rotate(6deg);
+  }
+  50% {
+    transform: rotate(-18deg);
+  }
+}
+
+@keyframes lb-bridge-body {
+  0%, 100% {
+    transform: rotate(10deg) translateY(20px);
+  }
+  50% {
+    transform: rotate(-8deg) translateY(-18px);
+  }
+}
+
+@keyframes lb-bridge-leg {
+  0%, 100% {
+    transform: rotate(-34deg) translateY(10px);
+  }
+  50% {
+    transform: rotate(-52deg) translateY(-12px);
+  }
+}
+
+@keyframes lb-lunge-body {
+  0%, 100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(24px);
+  }
+}
+
+@keyframes lb-lunge-front {
+  0%, 100% {
+    transform: translate(0, 0) rotate(8deg);
+  }
+  50% {
+    transform: translate(-16px, 18px) rotate(42deg);
+  }
+}
+
+@keyframes lb-lunge-back-thigh {
+  0%, 100% {
+    transform: translate(0, 0) rotate(-9deg);
+  }
+  50% {
+    transform: translate(40px, 18px) rotate(-54deg);
+  }
+}
+
+@keyframes lb-lunge-back-shin {
+  0%, 100% {
+    transform: translate(0, 0) rotate(-6deg);
+  }
+  50% {
+    transform: translate(66px, 30px) rotate(-2deg);
+  }
+}
+
+@keyframes lb-wall-sit {
+  0%, 100% {
+    transform: translate(0, 0);
+  }
+  35%, 70% {
+    transform: translate(34px, 26px);
+  }
+}
+
+@keyframes lb-calf-rise {
+  0%, 100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-22px);
+  }
+}
+
+@keyframes lb-calf-foot {
+  0%, 100% {
+    transform: rotate(0deg);
+  }
+  50% {
+    transform: rotate(-14deg);
   }
 }
 
