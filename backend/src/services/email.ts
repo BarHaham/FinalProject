@@ -1,4 +1,4 @@
-import nodemailer from 'nodemailer';
+import { Resend } from 'resend';
 
 type EmailMessage = {
   to: string;
@@ -6,37 +6,11 @@ type EmailMessage = {
   text: string;
 };
 
-const hasSmtpConfig = () => Boolean(process.env.EMAIL_USER && process.env.EMAIL_PASSWORD);
-
-const createTransporter = () => {
-  const service = process.env.EMAIL_SERVICE || 'gmail';
-  const host = process.env.EMAIL_HOST;
-  const port = Number(process.env.EMAIL_PORT || 587);
-
-  if (host) {
-    return nodemailer.createTransport({
-      host,
-      port,
-      secure: port === 465,
-      auth: {
-        user: process.env.EMAIL_USER,
-        pass: process.env.EMAIL_PASSWORD,
-      },
-    });
-  }
-
-  return nodemailer.createTransport({
-    service,
-    auth: {
-      user: process.env.EMAIL_USER,
-      pass: process.env.EMAIL_PASSWORD,
-    },
-  });
-};
-
 export const sendEmail = async ({ to, subject, text }: EmailMessage) => {
-  if (!hasSmtpConfig()) {
-    console.warn('Email was not sent because EMAIL_USER or EMAIL_PASSWORD is missing.');
+  const apiKey = process.env.RESEND_API_KEY;
+
+  if (!apiKey) {
+    console.warn('Email not sent — RESEND_API_KEY is missing.');
     console.log('--- FitLingo email preview ---');
     console.log(`To: ${to}`);
     console.log(`Subject: ${subject}`);
@@ -45,15 +19,10 @@ export const sendEmail = async ({ to, subject, text }: EmailMessage) => {
     return { sent: false, previewOnly: true };
   }
 
-  const transporter = createTransporter();
-  const from = process.env.EMAIL_FROM || process.env.EMAIL_USER;
+  const resend = new Resend(apiKey);
+  const from = process.env.EMAIL_FROM || 'FitLingo <onboarding@resend.dev>';
 
-  await transporter.sendMail({
-    from,
-    to,
-    subject,
-    text,
-  });
+  await resend.emails.send({ from, to, subject, text });
 
   return { sent: true, previewOnly: false };
 };
