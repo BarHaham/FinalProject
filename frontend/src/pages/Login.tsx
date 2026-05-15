@@ -41,11 +41,15 @@ const Login: React.FC = () => {
     setResetLoading(true);
 
     try {
-      await axios.post(`${apiUrl}/auth/forgot-password`, { email });
+      await axios.post(`${apiUrl}/auth/forgot-password`, { email }, { timeout: 60000 });
       toast.success(t('auth.resetSent'));
       setResetMode(false);
-    } catch {
-      toast.error(t('auth.resetFailed'));
+    } catch (error: any) {
+      if (error.code === 'ECONNABORTED') {
+        toast.error('Server is waking up, please try again in 30 seconds.');
+      } else {
+        toast.error(t('auth.resetFailed'));
+      }
     } finally {
       setResetLoading(false);
     }
