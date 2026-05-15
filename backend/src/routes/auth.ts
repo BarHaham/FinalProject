@@ -139,13 +139,14 @@ router.post('/forgot-password', async (req, res) => {
       [hashedPassword, user.id]
     );
 
-    await sendEmail({
+    // Respond immediately — send email in background so the user isn't left waiting
+    res.json({ message: 'If this email exists, reset instructions were sent.' });
+
+    sendEmail({
       to: user.email,
       subject: 'Your FitLingo temporary password',
       text: `Hi ${user.name},\n\nYour temporary FitLingo password is:\n\n${temporaryPassword}\n\nPlease log in and change it later. If you did not request this, ignore this email and contact support.`,
-    });
-
-    res.json({ message: 'If this email exists, reset instructions were sent.' });
+    }).catch((err) => console.error('Failed to send reset email:', err));
   } catch (error: any) {
     res.status(500).json({ error: error.message });
   }
