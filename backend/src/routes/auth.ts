@@ -74,7 +74,7 @@ router.post('/login', async (req, res) => {
       return res.status(400).json({ error: 'Email and password required' });
     }
 
-    const result = await pool.query('SELECT * FROM users WHERE email = $1', [email]);
+    const result = await pool.query('SELECT * FROM users WHERE LOWER(email) = $1', [email]);
 
     if (result.rows.length === 0) {
       return res.status(401).json({ error: 'Invalid credentials' });
@@ -123,7 +123,7 @@ router.post('/forgot-password', async (req, res) => {
       return res.status(400).json({ error: 'Email is required' });
     }
 
-    const userResult = await pool.query('SELECT id, email, name FROM users WHERE email = $1', [email]);
+    const userResult = await pool.query('SELECT id, email, name FROM users WHERE LOWER(email) = $1', [email]);
 
     // Do not reveal whether the email exists.
     if (userResult.rows.length === 0) {
