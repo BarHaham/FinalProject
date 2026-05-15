@@ -22,7 +22,9 @@ export const sendEmail = async ({ to, subject, text }: EmailMessage) => {
   const resend = new Resend(apiKey);
   const from = process.env.EMAIL_FROM || 'FitLingo <onboarding@resend.dev>';
 
-  await resend.emails.send({ from, to, subject, text });
+  console.log(`[email] Attempting to send to ${to} via Resend...`);
+  const result = await resend.emails.send({ from, to, subject, text });
+  console.log(`[email] Resend response:`, JSON.stringify(result));
 
   return { sent: true, previewOnly: false };
 };
