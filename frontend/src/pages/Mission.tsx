@@ -221,7 +221,7 @@ const Mission: React.FC = () => {
   };
 
   if (completed) {
-    const displayStreak = completionData?.streak ?? currentStreak + 1;
+    const displayStreak = completionData?.streak ?? currentStreak;
     const displayAchievements = completionData?.achievements ?? [];
 
     return (
