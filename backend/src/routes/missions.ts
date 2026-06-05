@@ -95,37 +95,6 @@ router.get('/daily/:userId', async (req, res) => {
     );
 
     if (existing.rows.length > 0) {
-      if (existing.rows[0].completed) {
-        const template = await getMissionTemplateForUser(userId);
-        const refreshed = await pool.query(
-          `UPDATE missions
-           SET title = $1,
-               description = $2,
-               duration_minutes = $3,
-               difficulty_level = $4,
-               focus_area = $5,
-               xp_reward = $6,
-               exercises = $7,
-               completed = FALSE,
-               completed_at = NULL,
-               updated_at = CURRENT_TIMESTAMP
-           WHERE id = $8
-           RETURNING *`,
-          [
-            template.title,
-            template.description,
-            template.durationMinutes,
-            template.difficultyLevel,
-            template.focusArea,
-            template.xpReward,
-            JSON.stringify(template.exercises),
-            existing.rows[0].id,
-          ]
-        );
-
-        return res.json(refreshed.rows[0]);
-      }
-
       return res.json(existing.rows[0]);
     }
 
