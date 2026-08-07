@@ -58,7 +58,7 @@ const dictionary: Record<Language, Record<string, string>> = {
     'mission.next': 'Next',
     'mission.nextExercise': 'Next exercise',
     'mission.completionScreen': 'Completion screen',
-    'dashboard.title': 'Home',
+    'dashboard.title': 'niv test',
     'dashboard.todayEnough': 'Today is enough',
     'dashboard.welcomeBack': 'Welcome back',
     'dashboard.fallbackName': 'athlete',
