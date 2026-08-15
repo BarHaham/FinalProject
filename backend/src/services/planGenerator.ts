@@ -181,7 +181,7 @@ const buildPrompt = (profile: UserProfile, allowed: LibraryExercise[], language:
     `- Every lesson must take roughly ${targetMinutes} minutes (within 2 minutes either way).`,
     '- The FIRST exercise of every lesson must be from the warmup category.',
     '- Progress difficulty gradually across sections; early lessons easier, later lessons harder.',
-    '- EXACTLY 5 sections. Each section has 3 to 5 lessons (15 to 25 lessons total). 3 to 7 exercises per lesson.',
+    '- EXACTLY 5 sections. Each section has 3 to 5 lessons (15 to 25 lessons total). Never give a section fewer than 3 lessons. 3 to 7 exercises per lesson.',
     '- xpReward between 10 and 40, higher for longer/harder lessons.',
     '- lessonType is a short focus label such as "Core", "Legs", "Cardio", "Mobility", "Full body" — never the word "lesson".',
     '- For doseType "time", amount is seconds (10-90). For "reps", amount is repetitions (4-20). Use perSide=true for one-sided moves.',
@@ -237,10 +237,20 @@ type RepairedLesson = {
 const repairPlan = (plan: AiPlan, allowed: LibraryExercise[]): RepairedLesson[] => {
   const allowedById = new Map(allowed.map((entry) => [entry.id, entry]));
   const warmups = allowed.filter((entry) => entry.category === 'warmup');
-  const lessons: RepairedLesson[] = [];
 
-  plan.sections.slice(0, 5).forEach((section, sectionIndex) => {
-    section.lessons.slice(0, 5).forEach((lesson, lessonIndex) => {
+  const sectionMetas = plan.sections.slice(0, 5).map((section, index) => ({
+    title: clean(section.title, 100) || `Section ${index + 1}`,
+    summary: clean(section.summary, 220),
+  }));
+
+  // First pass: repair every usable lesson into a flat, ordered list.
+  type FlatLesson = Omit<RepairedLesson, 'sectionTitle' | 'sectionSummary' | 'sectionNumber' | 'lessonNumber'>;
+  const flat: FlatLesson[] = [];
+
+  plan.sections.slice(0, 5).forEach((section) => {
+    section.lessons.slice(0, 6).forEach((lesson) => {
+      if (flat.length >= 25) return;
+
       const exercises = lesson.exercises.slice(0, 7).map((item) => {
         const entry = allowedById.get(item.exerciseId) || substitute(item, allowed);
         const isTime = item.doseType === 'time';
@@ -254,25 +264,45 @@ const repairPlan = (plan: AiPlan, allowed: LibraryExercise[]): RepairedLesson[] 
 
       // Guarantee the lesson opens with a warmup movement.
       if (warmups.length > 0 && exercises.length > 0 && exercises[0].entry.category !== 'warmup') {
-        const warmup = warmups[lessons.length % warmups.length];
+        const warmup = warmups[flat.length % warmups.length];
         exercises.unshift({ entry: warmup, dose: warmup.defaultDose });
       }
 
       if (exercises.length < 2) return;
 
-      lessons.push({
-        name: clean(lesson.name, 100) || `Lesson ${lessons.length + 1}`,
+      flat.push({
+        name: clean(lesson.name, 100) || `Lesson ${flat.length + 1}`,
         lessonType: clean(lesson.lessonType, 60) || 'Workout',
         xpReward: clamp(lesson.xpReward, 10, 40),
         estimatedDurationMinutes: clamp(lesson.estimatedDurationMinutes, 3, 20),
         difficulty: clean(lesson.difficulty, 30) || 'Beginner',
-        sectionTitle: clean(section.title, 100) || `Section ${sectionIndex + 1}`,
-        sectionSummary: clean(section.summary, 220),
-        sectionNumber: sectionIndex + 1,
-        lessonNumber: lessonIndex + 1,
         exercises,
       });
     });
+  });
+
+  // Second pass: redistribute the lessons evenly across the section titles.
+  // Models sometimes return lopsided structures (a section with 1 lesson),
+  // and lesson-dropping above can shrink sections further — so the section
+  // sizes are decided here in code, not trusted from the model.
+  const sectionCount = Math.max(1, sectionMetas.length);
+  const base = Math.floor(flat.length / sectionCount);
+  const extra = flat.length % sectionCount;
+
+  const lessons: RepairedLesson[] = [];
+  let cursor = 0;
+  sectionMetas.forEach((meta, sectionIndex) => {
+    const size = base + (sectionIndex < extra ? 1 : 0);
+    for (let position = 0; position < size; position += 1) {
+      lessons.push({
+        ...flat[cursor],
+        sectionTitle: meta.title,
+        sectionSummary: meta.summary,
+        sectionNumber: sectionIndex + 1,
+        lessonNumber: position + 1,
+      });
+      cursor += 1;
+    }
   });
 
   return lessons;
@@ -288,7 +318,7 @@ const validateStructure = (plan: AiPlan, allowedIds: Set<string>): string | null
     (section.lessons || []).flatMap((lesson) => lesson.exercises || [])
   );
   const totalLessons = plan.sections.reduce((count, section) => count + (section.lessons || []).length, 0);
-  if (totalLessons < 12) {
+  if (totalLessons < 15) {
     return `Only ${totalLessons} lessons returned; the plan needs 15 to 25 lessons (3 to 5 per section).`;
   }
   if (allExercises.length === 0) {

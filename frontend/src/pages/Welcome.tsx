@@ -16,8 +16,8 @@ const previewItems = [
 ];
 
 const statsItems = [
-  { value: '15', key: 'welcome.stat1' },
-  { value: '25+', key: 'welcome.stat2' },
+  { value: 'AI', key: 'welcome.stat1' },
+  { value: '100+', key: 'welcome.stat2' },
   { value: '5', key: 'welcome.stat3' },
   { value: '7', key: 'welcome.stat4' },
 ];
