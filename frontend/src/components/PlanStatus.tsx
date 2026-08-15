@@ -41,10 +41,11 @@ export const usePlanStatus = () => {
 // (the server may still finish and commit).
 export const runPlanGeneration = async (userId: number, language: string): Promise<boolean> => {
   try {
-    const { data } = await api.post(`/users/${userId}/plan/generate`, { language }, { timeout: 45000 });
+    const { data } = await api.post(`/users/${userId}/plan/generate`, { language }, { timeout: 65000 });
     return data?.status === 'ready';
   } catch {
-    const deadline = Date.now() + 30000;
+    // Keep polling for up to 90 more seconds — the server may still finish.
+    const deadline = Date.now() + 90000;
     while (Date.now() < deadline) {
       await new Promise((resolve) => setTimeout(resolve, 3000));
       try {

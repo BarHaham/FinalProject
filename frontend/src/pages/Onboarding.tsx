@@ -163,14 +163,15 @@ const Onboarding: React.FC = () => {
     // status for up to 30 more seconds before falling back.
     setGenerating(true);
     try {
-      const { data } = await api.post(`/users/${user.id}/plan/generate`, { language }, { timeout: 45000 });
+      const { data } = await api.post(`/users/${user.id}/plan/generate`, { language }, { timeout: 65000 });
       if (data?.status === 'ready') {
         toast.success(t('onboarding.planReady'));
         navigate('/path');
         return;
       }
     } catch {
-      const deadline = Date.now() + 30000;
+      // Keep polling for up to 90 more seconds — the server may still finish.
+      const deadline = Date.now() + 90000;
       while (Date.now() < deadline) {
         await sleep(3000);
         try {

@@ -181,7 +181,7 @@ const buildPrompt = (profile: UserProfile, allowed: LibraryExercise[], language:
     `- Every lesson must take roughly ${targetMinutes} minutes (within 2 minutes either way).`,
     '- The FIRST exercise of every lesson must be from the warmup category.',
     '- Progress difficulty gradually across sections; early lessons easier, later lessons harder.',
-    '- EXACTLY 5 sections. Each section has 6 to 8 lessons (30 to 40 lessons total). 3 to 7 exercises per lesson.',
+    '- EXACTLY 5 sections. Each section has 3 to 5 lessons (15 to 25 lessons total). 3 to 7 exercises per lesson.',
     '- xpReward between 10 and 40, higher for longer/harder lessons.',
     '- lessonType is a short focus label such as "Core", "Legs", "Cardio", "Mobility", "Full body" — never the word "lesson".',
     '- For doseType "time", amount is seconds (10-90). For "reps", amount is repetitions (4-20). Use perSide=true for one-sided moves.',
@@ -240,7 +240,7 @@ const repairPlan = (plan: AiPlan, allowed: LibraryExercise[]): RepairedLesson[] 
   const lessons: RepairedLesson[] = [];
 
   plan.sections.slice(0, 5).forEach((section, sectionIndex) => {
-    section.lessons.slice(0, 8).forEach((lesson, lessonIndex) => {
+    section.lessons.slice(0, 5).forEach((lesson, lessonIndex) => {
       const exercises = lesson.exercises.slice(0, 7).map((item) => {
         const entry = allowedById.get(item.exerciseId) || substitute(item, allowed);
         const isTime = item.doseType === 'time';
@@ -288,8 +288,8 @@ const validateStructure = (plan: AiPlan, allowedIds: Set<string>): string | null
     (section.lessons || []).flatMap((lesson) => lesson.exercises || [])
   );
   const totalLessons = plan.sections.reduce((count, section) => count + (section.lessons || []).length, 0);
-  if (totalLessons < 24) {
-    return `Only ${totalLessons} lessons returned; the plan needs 30 to 40 lessons (6 to 8 per section).`;
+  if (totalLessons < 12) {
+    return `Only ${totalLessons} lessons returned; the plan needs 15 to 25 lessons (3 to 5 per section).`;
   }
   if (allExercises.length === 0) {
     return 'Lessons contained no exercises.';
@@ -345,7 +345,7 @@ export const generatePlanForUser = async (
     });
 
     const lessons = repairPlan(aiPlan, allowed);
-    if (lessons.length < 12) {
+    if (lessons.length < 10) {
       throw new Error('Plan had too few usable lessons after validation');
     }
 
