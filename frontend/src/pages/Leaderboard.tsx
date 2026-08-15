@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import AppShell from '../components/AppShell';
 import api from '../utils/api';
@@ -36,6 +36,9 @@ const Leaderboard: React.FC = () => {
   const [userRank, setUserRank] = useState<UserRank | null>(null);
   const [selectedLeague, setSelectedLeague] = useState('Bronze');
   const [loading, setLoading] = useState(true);
+  // Jump to the user's own league only on the first load — after that the
+  // league tabs must stay wherever the user clicked.
+  const leagueInitialized = useRef(false);
 
   useEffect(() => {
     const user = getStoredUser();
@@ -50,7 +53,12 @@ const Leaderboard: React.FC = () => {
 
         if (rankRes.data?.league) {
           setUserRank(rankRes.data);
-          setSelectedLeague(rankRes.data.league);
+          if (!leagueInitialized.current) {
+            leagueInitialized.current = true;
+            if (rankRes.data.league !== selectedLeague) {
+              setSelectedLeague(rankRes.data.league);
+            }
+          }
         }
         setEntries(entriesRes.data);
       } catch {

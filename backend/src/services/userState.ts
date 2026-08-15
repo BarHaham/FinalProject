@@ -25,6 +25,15 @@ export const ensureUserState = async (client: PoolClient, userId: number) => {
     );
   }
 
+  // Enroll the user in this week's Bronze standings so they appear on the
+  // leaderboard immediately (0 XP until they complete a mission).
+  await client.query(
+    `INSERT INTO leaderboard (user_id, league, weekly_xp, week_start_date)
+     VALUES ($1, 'Bronze', 0, $2)
+     ON CONFLICT (user_id, week_start_date) DO NOTHING`,
+    [userId, weekStartDate()]
+  );
+
   const firstLessons = await client.query(
     'SELECT id FROM path_lessons WHERE user_id IS NULL ORDER BY section_number, unit_number, lesson_number'
   );
