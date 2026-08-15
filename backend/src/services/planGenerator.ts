@@ -183,6 +183,7 @@ const buildPrompt = (profile: UserProfile, allowed: LibraryExercise[], language:
     '- Progress difficulty gradually across sections; early lessons easier, later lessons harder.',
     '- 4 to 6 sections, 2 to 4 lessons per section, 3 to 7 exercises per lesson, 10 to 20 lessons total.',
     '- xpReward between 10 and 40, higher for longer/harder lessons.',
+    '- lessonType is a short focus label such as "Core", "Legs", "Cardio", "Mobility", "Full body" — never the word "lesson".',
     '- For doseType "time", amount is seconds (10-90). For "reps", amount is repetitions (4-20). Use perSide=true for one-sided moves.',
     '- Align the theme of sections and lesson selection with the user\'s goal, sports interests, and follow-up answers.',
     `- Write all titles, summaries, lesson names and lessonType values in ${responseLanguage}.`,
@@ -280,14 +281,14 @@ const repairPlan = (plan: AiPlan, allowed: LibraryExercise[]): RepairedLesson[] 
 // Structural validation used inside the AI retry loop: cheap checks whose
 // failures are worth a model retry (deeper repair happens in repairPlan).
 const validateStructure = (plan: AiPlan, allowedIds: Set<string>): string | null => {
-  if (!Array.isArray(plan.sections) || plan.sections.length < 3) {
-    return 'The plan must contain at least 4 sections.';
+  if (!Array.isArray(plan.sections) || plan.sections.length < 2) {
+    return 'The plan must contain 4 to 6 sections.';
   }
   const allExercises = plan.sections.flatMap((section) =>
     (section.lessons || []).flatMap((lesson) => lesson.exercises || [])
   );
   const totalLessons = plan.sections.reduce((count, section) => count + (section.lessons || []).length, 0);
-  if (totalLessons < 8) {
+  if (totalLessons < 6) {
     return `Only ${totalLessons} lessons returned; the plan needs 10 to 20 lessons.`;
   }
   if (allExercises.length === 0) {
@@ -344,7 +345,7 @@ export const generatePlanForUser = async (
     });
 
     const lessons = repairPlan(aiPlan, allowed);
-    if (lessons.length < 6) {
+    if (lessons.length < 4) {
       throw new Error('Plan had too few usable lessons after validation');
     }
 

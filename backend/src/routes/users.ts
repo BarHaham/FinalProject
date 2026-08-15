@@ -378,6 +378,8 @@ router.get('/:id/plan', requireSelf, async (req, res) => {
       language: plan.language,
       generated_at: plan.generated_at,
       aiEnabled: isAiEnabled(),
+      // Failure reason (visible to the owner only) — helps diagnose AI issues.
+      error: plan.status === 'failed' ? plan.error : undefined,
     });
   } catch (error: any) {
     res.status(500).json({ error: error.message });

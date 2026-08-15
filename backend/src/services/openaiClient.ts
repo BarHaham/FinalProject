@@ -59,18 +59,26 @@ export const completeJson = async <T>(options: CompleteJsonOptions<T>): Promise<
 
   let lastError = 'unknown error';
   for (let attempt = 0; attempt <= maxRetries; attempt += 1) {
-    const response = await getClient().chat.completions.create({
-      model: getModel(),
-      messages,
-      response_format: {
-        type: 'json_schema',
-        json_schema: {
-          name: options.schema.name,
-          strict: true,
-          schema: options.schema.schema as Record<string, unknown>,
+    let response;
+    try {
+      response = await getClient().chat.completions.create({
+        model: getModel(),
+        messages,
+        response_format: {
+          type: 'json_schema',
+          json_schema: {
+            name: options.schema.name,
+            strict: true,
+            schema: options.schema.schema as Record<string, unknown>,
+          },
         },
-      },
-    });
+      });
+    } catch (apiError: any) {
+      // Transient API/network/timeout failures also deserve the retry budget.
+      lastError = `API error: ${String(apiError?.message || apiError).slice(0, 200)}`;
+      if (attempt < maxRetries) continue;
+      throw apiError;
+    }
 
     const content = response.choices[0]?.message?.content || '';
     let parsed: T | null = null;
