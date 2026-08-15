@@ -1,10 +1,11 @@
 import React, { useEffect, useState } from 'react';
 import toast from 'react-hot-toast';
 import AppShell from '../components/AppShell';
+import { PlanBadge, isAiPlan, runPlanGeneration, usePlanStatus } from '../components/PlanStatus';
 import { achievements } from '../data/sportLingoData';
 import { getStoredUser } from '../utils/storage';
 import { useLanguage } from '../i18n/LanguageContext';
-import api from '../utils/api';
+import api, { hasRealApi } from '../utils/api';
 
 interface User {
   id: number;
@@ -28,7 +29,24 @@ const Profile: React.FC = () => {
   });
   const [passwordLoading, setPasswordLoading] = useState(false);
   const [loading, setLoading] = useState(true);
-  const { t, tv } = useLanguage();
+  const [regenerating, setRegenerating] = useState(false);
+  const { plan, refresh: refreshPlan } = usePlanStatus();
+  const { t, tv, language } = useLanguage();
+
+  const handleRegeneratePlan = async () => {
+    if (!user || regenerating) return;
+    if (!window.confirm(t('plan.regenerateConfirm'))) return;
+
+    setRegenerating(true);
+    const ready = await runPlanGeneration(user.id, language);
+    if (ready) {
+      toast.success(t('plan.regenerateSuccess'));
+    } else {
+      toast.error(t('plan.regenerateFailed'));
+    }
+    await refreshPlan();
+    setRegenerating(false);
+  };
 
   useEffect(() => {
     const storedUser = getStoredUser();
@@ -233,6 +251,33 @@ const Profile: React.FC = () => {
             </div>
           )}
         </section>
+
+        {hasRealApi && plan && (
+          <section className="rounded-md border border-slate-200 bg-white p-5 shadow-sm">
+            <div className="flex flex-wrap items-center justify-between gap-3">
+              <div>
+                <div className="flex flex-wrap items-center gap-2">
+                  <h2 className="text-2xl font-black">{t('plan.myPlan')}</h2>
+                  <PlanBadge plan={plan} />
+                </div>
+                <p className="mt-2 text-sm text-slate-600">
+                  {isAiPlan(plan) ? t('plan.aiDescription') : t('plan.starterDescription')}
+                </p>
+                {isAiPlan(plan) && plan.generated_at && (
+                  <p className="mt-1 text-sm text-slate-500">
+                    {t('plan.generatedOn')}: {new Date(plan.generated_at).toLocaleDateString()}
+                    {plan.language ? ` · ${t('plan.language')}: ${plan.language === 'he' ? 'עברית' : 'English'}` : ''}
+                  </p>
+                )}
+              </div>
+              {plan.aiEnabled && (
+                <button type="button" onClick={handleRegeneratePlan} disabled={regenerating} className="btn-primary">
+                  {regenerating ? t('onboarding.generatingTitle') : isAiPlan(plan) ? t('plan.regenerate') : t('plan.starterBannerButton')}
+                </button>
+              )}
+            </div>
+          </section>
+        )}
 
         <section className="rounded-md border border-slate-200 bg-white p-5 shadow-sm">
           <h2 className="mb-6 text-2xl font-black">{t('profile.changePassword')}</h2>

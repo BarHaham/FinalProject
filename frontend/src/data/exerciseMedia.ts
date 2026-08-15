@@ -1,4 +1,5 @@
 import { Exercise } from './sportLingoData';
+import { getExerciseKey } from './exerciseKeys';
 
 type ExerciseMedia = {
   mediaType: 'gif';
@@ -8,57 +9,59 @@ type ExerciseMedia = {
   credit: string;
 };
 
+// Keyed by the stable exercise id from the shared exercise library, so media
+// works for AI-generated (including Hebrew) content and legacy snapshots alike.
 export const exerciseMedia: Record<string, ExerciseMedia> = {
-  'Standing Hip Openers': {
+  'standing-hip-openers': {
     mediaType: 'gif',
     mediaUrl: 'https://static.exercisedb.dev/media/J9zIWig.gif',
     source: 'ExerciseDB',
     sourceExerciseName: 'walking high knees lunge',
     credit: 'Demo GIF provided by ExerciseDB / AscendAPI free tier.',
   },
-  'Glute Bridge': {
+  'glute-bridge': {
     mediaType: 'gif',
     mediaUrl: 'https://static.exercisedb.dev/media/u0cNiij.gif',
     source: 'ExerciseDB',
     sourceExerciseName: 'low glute bridge on floor',
     credit: 'Demo GIF provided by ExerciseDB / AscendAPI free tier.',
   },
-  'Reverse Lunge': {
+  'reverse-lunge': {
     mediaType: 'gif',
     mediaUrl: 'https://static.exercisedb.dev/media/IZVHb27.gif',
     source: 'ExerciseDB',
     sourceExerciseName: 'walking lunge',
     credit: 'Demo GIF provided by ExerciseDB / AscendAPI free tier.',
   },
-  'Forearm Plank': {
+  'forearm-plank': {
     mediaType: 'gif',
     mediaUrl: 'https://static.exercisedb.dev/media/VBAWRPG.gif',
     source: 'ExerciseDB',
     sourceExerciseName: 'weighted front plank',
     credit: 'Demo GIF provided by ExerciseDB / AscendAPI free tier.',
   },
-  'Calf Raise': {
+  'calf-raise': {
     mediaType: 'gif',
     mediaUrl: 'https://static.exercisedb.dev/media/0jp9Rlz.gif',
     source: 'ExerciseDB',
     sourceExerciseName: 'one leg floor calf raise',
     credit: 'Demo GIF provided by ExerciseDB / AscendAPI free tier.',
   },
-  'Incline Push-up': {
+  'incline-pushup': {
     mediaType: 'gif',
     mediaUrl: 'https://static.exercisedb.dev/media/1YB40kg.gif',
     source: 'ExerciseDB',
     sourceExerciseName: 'incline close-grip push-up',
     credit: 'Demo GIF provided by ExerciseDB / AscendAPI free tier.',
   },
-  'Chair Triceps Dip': {
+  'chair-triceps-dip': {
     mediaType: 'gif',
     mediaUrl: 'https://static.exercisedb.dev/media/05Cf2v8.gif',
     source: 'ExerciseDB',
     sourceExerciseName: 'impossible dips',
     credit: 'Demo GIF provided by ExerciseDB / AscendAPI free tier.',
   },
-  'Child Pose Reach': {
+  'child-pose-reach': {
     mediaType: 'gif',
     mediaUrl: 'https://static.exercisedb.dev/media/01qpYSe.gif',
     source: 'ExerciseDB',
@@ -69,7 +72,7 @@ export const exerciseMedia: Record<string, ExerciseMedia> = {
 
 export const enrichExercisesWithMedia = (exercises: Exercise[]) => (
   exercises.map((exercise) => {
-    const media = exerciseMedia[exercise.name];
+    const media = exerciseMedia[getExerciseKey(exercise)];
     if (!media) return exercise;
 
     return {

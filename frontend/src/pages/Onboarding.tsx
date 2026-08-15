@@ -1,13 +1,16 @@
-import React, { useMemo, useState } from 'react';
+import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import toast from 'react-hot-toast';
 import {
+  FollowUpAnswer,
   OnboardingProfile,
   defaultOnboardingProfile,
   getStoredUser,
   mergeUserWithOnboarding,
   saveOnboardingProfile,
 } from '../utils/storage';
-import api from '../utils/api';
+import api, { hasRealApi } from '../utils/api';
+import DynamicQuestionStep, { DynamicQuestion } from '../components/DynamicQuestionStep';
 import { formatText, useLanguage } from '../i18n/LanguageContext';
 
 const goals = [
@@ -23,12 +26,28 @@ const goals = [
 const equipmentOptions = ['No equipment', 'Chair', 'Yoga mat', 'Resistance bands', 'Dumbbells', 'Running area'];
 const sportOptions = ['General fitness', 'Strength training', 'Cardio', 'Running', 'Basketball', 'Mobility and stretching', 'Core training'];
 
+const GENERATING_MESSAGE_KEYS = [
+  'onboarding.generating1',
+  'onboarding.generating2',
+  'onboarding.generating3',
+  'onboarding.generating4',
+];
+
+const sleep = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
+
 const Onboarding: React.FC = () => {
   const navigate = useNavigate();
   const [step, setStep] = useState(0);
   const [profile, setProfile] = useState<OnboardingProfile>(defaultOnboardingProfile);
-  const { t, tv, isHebrew } = useLanguage();
+  const [aiQuestions, setAiQuestions] = useState<DynamicQuestion[]>([]);
+  const [dynamicAnswers, setDynamicAnswers] = useState<Record<string, string[]>>({});
+  const [saving, setSaving] = useState(false);
+  const [generating, setGenerating] = useState(false);
+  const [generatingMessageIndex, setGeneratingMessageIndex] = useState(0);
+  const questionsRequested = useRef(false);
+  const { t, tv, isHebrew, language } = useLanguage();
 
+  // 5 fixed steps → N AI follow-up steps → motivation → summary.
   const steps = useMemo(
     () => [
       'onboarding.goal',
@@ -36,11 +55,54 @@ const Onboarding: React.FC = () => {
       'onboarding.level',
       'onboarding.detailsQuestion',
       'onboarding.equipment',
+      ...aiQuestions.map(() => 'onboarding.aiQuestions'),
       'onboarding.motivationQuestion',
       'onboarding.summaryTitle',
     ],
-    []
+    [aiQuestions]
   );
+
+  const dynamicStepStart = 5;
+  const dynamicStepEnd = dynamicStepStart + aiQuestions.length; // exclusive
+  const motivationStep = dynamicStepEnd;
+  const summaryStep = dynamicStepEnd + 1;
+
+  useEffect(() => {
+    if (generating) {
+      const timer = window.setInterval(
+        () => setGeneratingMessageIndex((current) => (current + 1) % GENERATING_MESSAGE_KEYS.length),
+        2500
+      );
+      return () => window.clearInterval(timer);
+    }
+    return undefined;
+  }, [generating]);
+
+  // Prefetch the AI follow-up questions once the core answers (goal, time,
+  // level) exist. Fired when leaving the level step so the network time is
+  // hidden behind the details/equipment steps.
+  const prefetchQuestions = () => {
+    if (questionsRequested.current || !hasRealApi) return;
+    const user = getStoredUser();
+    if (!user) return;
+    questionsRequested.current = true;
+
+    api
+      .post(`/users/${user.id}/onboarding/questions`, {
+        mainGoal: profile.mainGoal,
+        fitnessLevel: profile.fitnessLevel,
+        dailyTimeGoal: profile.dailyTimeGoal,
+        language,
+      })
+      .then(({ data }) => {
+        if (Array.isArray(data?.questions)) {
+          setAiQuestions(data.questions.slice(0, 5));
+        }
+      })
+      .catch(() => {
+        // No dynamic questions — the wizard simply keeps its fixed steps.
+      });
+  };
 
   const toggleListValue = (key: 'equipment' | 'sports' | 'secondaryGoals', value: string) => {
     setProfile((current) => {
@@ -52,20 +114,124 @@ const Onboarding: React.FC = () => {
     });
   };
 
+  const toggleDynamicAnswer = (question: DynamicQuestion, optionId: string) => {
+    setDynamicAnswers((current) => {
+      const existing = current[question.id] || [];
+      if (question.type === 'single') {
+        return { ...current, [question.id]: [optionId] };
+      }
+      return {
+        ...current,
+        [question.id]: existing.includes(optionId)
+          ? existing.filter((id) => id !== optionId)
+          : [...existing, optionId],
+      };
+    });
+  };
+
+  const collectFollowUpAnswers = (): FollowUpAnswer[] =>
+    aiQuestions
+      .map((question) => {
+        const answerIds = dynamicAnswers[question.id] || [];
+        return {
+          questionId: question.id,
+          question: question.question,
+          answerIds,
+          answerLabels: answerIds.map(
+            (id) => question.options.find((option) => option.id === id)?.label || id
+          ),
+        };
+      })
+      .filter((answer) => answer.answerIds.length > 0);
+
   const finishOnboarding = async () => {
-    saveOnboardingProfile(profile);
+    if (saving) return;
+    setSaving(true);
+
+    const fullProfile: OnboardingProfile = {
+      ...profile,
+      followUpAnswers: collectFollowUpAnswers(),
+      language,
+    };
+    saveOnboardingProfile(fullProfile);
+
     const user = getStoredUser();
-    if (user) {
-      const updatedUser = mergeUserWithOnboarding(user, profile);
-      try {
-        const { data: savedUser } = await api.post(`/users/${user.id}/onboarding`, profile);
-        localStorage.setItem('user', JSON.stringify({ ...updatedUser, ...savedUser }));
-      } catch {
-        localStorage.setItem('user', JSON.stringify(updatedUser));
+    if (!user) {
+      navigate('/dashboard');
+      return;
+    }
+
+    const updatedUser = mergeUserWithOnboarding(user, fullProfile);
+    let planGeneration = 'disabled';
+    try {
+      const { data: savedUser } = await api.post(`/users/${user.id}/onboarding`, fullProfile);
+      localStorage.setItem('user', JSON.stringify({ ...updatedUser, ...savedUser }));
+      planGeneration = savedUser?.planGeneration || 'disabled';
+    } catch {
+      localStorage.setItem('user', JSON.stringify(updatedUser));
+    }
+
+    if (!hasRealApi || planGeneration !== 'pending') {
+      navigate('/dashboard');
+      return;
+    }
+
+    // AI plan generation with a full-screen progress state. If the request
+    // times out client-side the server may still finish, so poll the plan
+    // status for up to 30 more seconds before falling back.
+    setGenerating(true);
+    try {
+      const { data } = await api.post(`/users/${user.id}/plan/generate`, { language }, { timeout: 45000 });
+      if (data?.status === 'ready') {
+        toast.success(t('onboarding.planReady'));
+        navigate('/path');
+        return;
+      }
+    } catch {
+      const deadline = Date.now() + 30000;
+      while (Date.now() < deadline) {
+        await sleep(3000);
+        try {
+          const { data } = await api.get(`/users/${user.id}/plan`);
+          if (data?.status === 'ready') {
+            toast.success(t('onboarding.planReady'));
+            navigate('/path');
+            return;
+          }
+          if (data?.status === 'failed' || data?.status === 'none') break;
+        } catch {
+          break;
+        }
       }
     }
+
+    toast(t('onboarding.planFailed'));
     navigate('/dashboard');
   };
+
+  const goNext = () => {
+    if (step === 2) {
+      prefetchQuestions();
+    }
+    if (step === steps.length - 1) {
+      finishOnboarding();
+      return;
+    }
+    setStep((current) => current + 1);
+  };
+
+  if (generating) {
+    return (
+      <div className="grid min-h-screen place-items-center bg-slate-950 px-4 text-white">
+        <div className="max-w-md text-center">
+          <div className="mx-auto h-16 w-16 animate-spin rounded-full border-4 border-white/20 border-t-primary" />
+          <h1 className="mt-8 text-3xl font-black">{t('onboarding.generatingTitle')}</h1>
+          <p className="mt-4 text-lg font-bold text-orange-200">{t(GENERATING_MESSAGE_KEYS[generatingMessageIndex])}</p>
+          <p className="mt-6 text-sm text-slate-400">{t('onboarding.generatingHint')}</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-slate-50 px-4 py-6">
@@ -189,7 +355,18 @@ const Onboarding: React.FC = () => {
             </div>
           )}
 
-          {step === 5 && (
+          {step >= dynamicStepStart && step < dynamicStepEnd && (
+            <DynamicQuestionStep
+              question={aiQuestions[step - dynamicStepStart]}
+              selectedIds={dynamicAnswers[aiQuestions[step - dynamicStepStart].id] || []}
+              onToggle={(optionId) => toggleDynamicAnswer(aiQuestions[step - dynamicStepStart], optionId)}
+              isHebrew={isHebrew}
+              kicker={t('onboarding.aiQuestions')}
+              copy={t('onboarding.aiQuestionsCopy')}
+            />
+          )}
+
+          {step === motivationStep && (
             <div>
               <h1 className="text-3xl font-black">{t('onboarding.motivationQuestion')}</h1>
               <div className="mt-5 grid gap-3">
@@ -208,7 +385,7 @@ const Onboarding: React.FC = () => {
             </div>
           )}
 
-          {step === 6 && (
+          {step === summaryStep && (
             <div>
               <h1 className="text-3xl font-black">{t('onboarding.summaryTitle')}</h1>
               <div className="mt-5 grid gap-3 text-slate-700">
@@ -229,7 +406,8 @@ const Onboarding: React.FC = () => {
             )}
             <button
               type="button"
-              onClick={() => (step === steps.length - 1 ? finishOnboarding() : setStep((current) => current + 1))}
+              onClick={goNext}
+              disabled={saving}
               className="btn-primary flex-1"
             >
               {step === steps.length - 1 ? t('onboarding.startFirst') : t('onboarding.continue')}

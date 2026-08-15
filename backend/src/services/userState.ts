@@ -25,7 +25,9 @@ export const ensureUserState = async (client: PoolClient, userId: number) => {
     );
   }
 
-  const firstLessons = await client.query('SELECT id FROM path_lessons ORDER BY section_number, unit_number, lesson_number');
+  const firstLessons = await client.query(
+    'SELECT id FROM path_lessons WHERE user_id IS NULL ORDER BY section_number, unit_number, lesson_number'
+  );
   for (const [index, lesson] of firstLessons.rows.entries()) {
     await client.query(
       `INSERT INTO user_path_progress (user_id, lesson_id, completed, attempted)

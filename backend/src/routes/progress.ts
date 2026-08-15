@@ -1,6 +1,7 @@
 import express from 'express';
 import pool from '../db/connection';
 import { calculateLevel } from '../services/userState';
+import { getActivePlan, getCurrentLessonForPlan, getScopedLessons } from '../services/planService';
 import { authenticateToken } from '../middleware/auth';
 
 const router = express.Router();
@@ -63,20 +64,10 @@ router.post('/:userId/add-xp', async (req, res) => {
 router.get('/:userId/path', async (req, res) => {
   try {
     const { userId } = req.params;
-    const result = await pool.query(
-      `SELECT
-        pl.*,
-        COALESCE(upp.completed, FALSE) AS completed,
-        COALESCE(upp.attempted, FALSE) AS attempted
-       FROM path_lessons pl
-       LEFT JOIN user_path_progress upp
-        ON upp.lesson_id = pl.id AND upp.user_id = $1
-       ORDER BY pl.section_number, pl.unit_number, pl.lesson_number`,
-      [userId]
-    );
+    const { lessons: scopedLessons } = await getScopedLessons(Number(userId));
 
     let firstOpenFound = false;
-    const lessons = result.rows.map((row) => {
+    const lessons = scopedLessons.map((row) => {
       let state = 'locked';
       if (row.completed) {
         state = 'completed';
@@ -115,24 +106,16 @@ router.post('/:userId/path/complete', async (req, res) => {
       [userId, lessonId]
     );
 
-    const nextLesson = await client.query(
-      `SELECT pl.id
-       FROM path_lessons pl
-       LEFT JOIN user_path_progress upp
-        ON upp.lesson_id = pl.id AND upp.user_id = $1
-       WHERE COALESCE(upp.completed, FALSE) = FALSE
-       ORDER BY pl.section_number, pl.unit_number, pl.lesson_number
-       LIMIT 1`,
-      [userId]
-    );
+    const activePlan = await getActivePlan(Number(userId), client);
+    const nextLesson = await getCurrentLessonForPlan(Number(userId), activePlan?.id ?? null, client);
 
-    if (nextLesson.rows.length > 0) {
+    if (nextLesson) {
       await client.query(
         `INSERT INTO user_path_progress (user_id, lesson_id, completed, attempted)
          VALUES ($1, $2, FALSE, TRUE)
          ON CONFLICT (user_id, lesson_id)
          DO UPDATE SET attempted = TRUE`,
-        [userId, nextLesson.rows[0].id]
+        [userId, nextLesson.id]
       );
     }
 
@@ -140,7 +123,7 @@ router.post('/:userId/path/complete', async (req, res) => {
 
     res.json({
       completed: true,
-      nextLessonId: nextLesson.rows[0]?.id ?? null,
+      nextLessonId: nextLesson?.id ?? null,
     });
   } catch (error: any) {
     await client.query('ROLLBACK');

@@ -2,6 +2,7 @@ import express from 'express';
 import pool from '../db/connection';
 import { beginnerDailyMission, practiceSessions } from '../data/content';
 import { calculateLevel, weekStartDate } from '../services/userState';
+import { getActivePlan, getCurrentLesson, getCurrentLessonForPlan } from '../services/planService';
 import { authenticateToken } from '../middleware/auth';
 
 const router = express.Router();
@@ -13,23 +14,8 @@ const toDateOnly = (value: unknown) => {
   return String(value).split('T')[0];
 };
 
-const getCurrentPathLesson = async (userId: number) => {
-  const result = await pool.query(
-    `SELECT pl.*
-     FROM path_lessons pl
-     LEFT JOIN user_path_progress upp
-      ON upp.lesson_id = pl.id AND upp.user_id = $1
-     WHERE COALESCE(upp.completed, FALSE) = FALSE
-     ORDER BY pl.section_number, pl.unit_number, pl.lesson_number
-     LIMIT 1`,
-    [userId]
-  );
-
-  return result.rows[0] || null;
-};
-
 const getMissionTemplateForUser = async (userId: number) => {
-  const currentLesson = await getCurrentPathLesson(userId);
+  const currentLesson = await getCurrentLesson(userId);
   return currentLesson
     ? {
       title: currentLesson.lesson_name,
@@ -245,44 +231,27 @@ router.post('/:missionId/complete', async (req, res) => {
       [mission.user_id, currentStreak, today]
     );
 
-    const pathLesson = await client.query(
-      `SELECT pl.id
-       FROM path_lessons pl
-       LEFT JOIN user_path_progress upp
-        ON upp.lesson_id = pl.id AND upp.user_id = $1
-       WHERE COALESCE(upp.completed, FALSE) = FALSE
-       ORDER BY pl.section_number, pl.unit_number, pl.lesson_number
-       LIMIT 1`,
-      [mission.user_id]
-    );
+    const activePlan = await getActivePlan(mission.user_id, client);
+    const pathLesson = await getCurrentLessonForPlan(mission.user_id, activePlan?.id ?? null, client);
 
-    if (pathLesson.rows.length > 0) {
+    if (pathLesson) {
       await client.query(
         `INSERT INTO user_path_progress (user_id, lesson_id, completed, attempted, completed_at)
          VALUES ($1, $2, TRUE, TRUE, CURRENT_TIMESTAMP)
          ON CONFLICT (user_id, lesson_id)
          DO UPDATE SET completed = TRUE, attempted = TRUE, completed_at = CURRENT_TIMESTAMP`,
-        [mission.user_id, pathLesson.rows[0].id]
+        [mission.user_id, pathLesson.id]
       );
 
-      const nextLesson = await client.query(
-        `SELECT pl.id
-         FROM path_lessons pl
-         LEFT JOIN user_path_progress upp
-          ON upp.lesson_id = pl.id AND upp.user_id = $1
-         WHERE COALESCE(upp.completed, FALSE) = FALSE
-         ORDER BY pl.section_number, pl.unit_number, pl.lesson_number
-         LIMIT 1`,
-        [mission.user_id]
-      );
+      const nextLesson = await getCurrentLessonForPlan(mission.user_id, activePlan?.id ?? null, client);
 
-      if (nextLesson.rows.length > 0) {
+      if (nextLesson) {
         await client.query(
           `INSERT INTO user_path_progress (user_id, lesson_id, completed, attempted)
            VALUES ($1, $2, FALSE, TRUE)
            ON CONFLICT (user_id, lesson_id)
            DO UPDATE SET attempted = TRUE`,
-          [mission.user_id, nextLesson.rows[0].id]
+          [mission.user_id, nextLesson.id]
         );
       }
     }

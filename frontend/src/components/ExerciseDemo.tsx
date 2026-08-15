@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { getExerciseDemo } from '../data/exerciseDemos';
+import { getExerciseKey } from '../data/exerciseKeys';
 import { Exercise } from '../data/sportLingoData';
 
 type ExerciseDemoProps = {
@@ -18,11 +19,14 @@ const ExerciseDemo: React.FC<ExerciseDemoProps> = ({
   tv,
 }) => {
   const [mediaFailed, setMediaFailed] = useState(false);
-  const sequenceDemo = getExerciseDemo(exercise.name);
-  const lowerBodyDemo = ['Chair Squat', 'Glute Bridge', 'Reverse Lunge', 'Wall Sit', 'Calf Raise'].includes(exercise.name);
-  const hasBuiltInDemo = exercise.name === 'Jumping Jacks'
-    || exercise.name === 'Arm Circles'
-    || exercise.name === 'Standing Hip Openers'
+  // Stable id-based key: works for AI-generated (incl. Hebrew) exercise names
+  // and for legacy snapshots that only carry the English display name.
+  const exerciseKey = getExerciseKey(exercise);
+  const sequenceDemo = getExerciseDemo(exerciseKey);
+  const lowerBodyDemo = ['chair-squat', 'glute-bridge', 'reverse-lunge', 'wall-sit', 'calf-raise'].includes(exerciseKey);
+  const hasBuiltInDemo = exerciseKey === 'jumping-jacks'
+    || exerciseKey === 'arm-circles'
+    || exerciseKey === 'standing-hip-openers'
     || lowerBodyDemo
     || Boolean(sequenceDemo);
 
@@ -131,19 +135,16 @@ const ExerciseDemo: React.FC<ExerciseDemoProps> = ({
   };
 
   const renderLowerBodyDemo = () => {
-    const demoClass = exercise.name
-      .toLowerCase()
-      .replace(/[^a-z]+/g, '-')
-      .replace(/^-|-$/g, '');
+    const demoClass = exerciseKey;
 
     const cueMap: Record<string, [string, string]> = {
-      'Chair Squat': ['Sit hips back', 'Stand tall'],
-      'Glute Bridge': ['Lift hips', 'Squeeze glutes'],
-      'Reverse Lunge': ['Step back', 'Push forward'],
-      'Wall Sit': ['Slide down', 'Hold steady'],
-      'Calf Raise': ['Rise up', 'Lower slow'],
+      'chair-squat': ['Sit hips back', 'Stand tall'],
+      'glute-bridge': ['Lift hips', 'Squeeze glutes'],
+      'reverse-lunge': ['Step back', 'Push forward'],
+      'wall-sit': ['Slide down', 'Hold steady'],
+      'calf-raise': ['Rise up', 'Lower slow'],
     };
-    const cues = cueMap[exercise.name] || ['Move', 'Control'];
+    const cues = cueMap[exerciseKey] || ['Move', 'Control'];
 
     return (
       <div className={`lower-body-demo lower-${demoClass} h-72 rounded-md ${isRunning && phase === 'exercise' ? '' : 'lb-paused'}`}>
@@ -173,9 +174,9 @@ const ExerciseDemo: React.FC<ExerciseDemoProps> = ({
 
   const renderMedia = () => {
     if (phase === 'rest') return renderRestDemo();
-    if (exercise.name === 'Jumping Jacks') return renderJumpingJacksDemo();
-    if (exercise.name === 'Arm Circles') return renderArmCirclesDemo();
-    if (exercise.name === 'Standing Hip Openers') return renderHipOpenersDemo();
+    if (exerciseKey === 'jumping-jacks') return renderJumpingJacksDemo();
+    if (exerciseKey === 'arm-circles') return renderArmCirclesDemo();
+    if (exerciseKey === 'standing-hip-openers') return renderHipOpenersDemo();
     if (lowerBodyDemo) return renderLowerBodyDemo();
 
     const sequenceMedia = renderSequenceDemo();

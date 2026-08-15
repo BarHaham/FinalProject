@@ -27,6 +27,9 @@ ALTER TABLE users ADD COLUMN IF NOT EXISTS current_activity_level VARCHAR(100);
 ALTER TABLE users ADD COLUMN IF NOT EXISTS motivation_reason VARCHAR(255);
 ALTER TABLE users ADD COLUMN IF NOT EXISTS preferred_workout_duration INTEGER;
 ALTER TABLE users ADD COLUMN IF NOT EXISTS last_seen_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP;
+ALTER TABLE users ADD COLUMN IF NOT EXISTS preferred_language VARCHAR(5);
+ALTER TABLE users ADD COLUMN IF NOT EXISTS onboarding_completed_at TIMESTAMP;
+ALTER TABLE users ADD COLUMN IF NOT EXISTS onboarding_answers JSONB;
 
 -- Equipment table
 CREATE TABLE IF NOT EXISTS equipment (
@@ -142,7 +145,24 @@ CREATE TABLE IF NOT EXISTS weekly_goals (
   created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
--- Path and lessons table
+-- AI-personalized training plans (one active plan per user; lessons live in path_lessons)
+CREATE TABLE IF NOT EXISTS user_plans (
+  id SERIAL PRIMARY KEY,
+  user_id INTEGER NOT NULL REFERENCES users(id),
+  status VARCHAR(20) NOT NULL DEFAULT 'generating',
+  source VARCHAR(20) NOT NULL DEFAULT 'ai',
+  language VARCHAR(5) NOT NULL DEFAULT 'en',
+  model VARCHAR(100),
+  profile_snapshot JSONB,
+  is_active BOOLEAN NOT NULL DEFAULT FALSE,
+  error TEXT,
+  generated_at TIMESTAMP,
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+CREATE UNIQUE INDEX IF NOT EXISTS idx_user_plans_one_active ON user_plans(user_id) WHERE is_active;
+
+-- Path and lessons table (rows with user_id IS NULL are the global static path;
+-- rows with user_id/plan_id set belong to a user's AI-generated plan)
 CREATE TABLE IF NOT EXISTS path_lessons (
   id SERIAL PRIMARY KEY,
   lesson_name VARCHAR(255) NOT NULL,
@@ -156,7 +176,15 @@ CREATE TABLE IF NOT EXISTS path_lessons (
   difficulty VARCHAR(50),
   created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
-CREATE UNIQUE INDEX IF NOT EXISTS idx_path_lessons_position ON path_lessons(section_number, unit_number, lesson_number);
+ALTER TABLE path_lessons ADD COLUMN IF NOT EXISTS user_id INTEGER REFERENCES users(id);
+ALTER TABLE path_lessons ADD COLUMN IF NOT EXISTS plan_id INTEGER REFERENCES user_plans(id);
+ALTER TABLE path_lessons ADD COLUMN IF NOT EXISTS section_title VARCHAR(255);
+ALTER TABLE path_lessons ADD COLUMN IF NOT EXISTS section_summary TEXT;
+ALTER TABLE path_lessons ADD COLUMN IF NOT EXISTS description TEXT;
+DROP INDEX IF EXISTS idx_path_lessons_position;
+CREATE UNIQUE INDEX IF NOT EXISTS idx_path_lessons_position_global
+  ON path_lessons(section_number, unit_number, lesson_number) WHERE user_id IS NULL;
+CREATE INDEX IF NOT EXISTS idx_path_lessons_user_plan ON path_lessons(user_id, plan_id);
 
 -- User path progress table
 CREATE TABLE IF NOT EXISTS user_path_progress (

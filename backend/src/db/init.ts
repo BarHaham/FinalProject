@@ -19,7 +19,7 @@ export const initializeDatabase = async () => {
         difficulty
       )
       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)
-      ON CONFLICT (section_number, unit_number, lesson_number)
+      ON CONFLICT (section_number, unit_number, lesson_number) WHERE user_id IS NULL
       DO UPDATE SET
         lesson_name = EXCLUDED.lesson_name,
         lesson_type = EXCLUDED.lesson_type,

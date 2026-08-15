@@ -15,6 +15,13 @@ export type StoredUser = {
   motivation_reason?: string;
 };
 
+export type FollowUpAnswer = {
+  questionId: string;
+  question: string;
+  answerIds: string[];
+  answerLabels: string[];
+};
+
 export type OnboardingProfile = {
   mainGoal: string;
   secondaryGoals: string[];
@@ -29,6 +36,8 @@ export type OnboardingProfile = {
   sports: string[];
   motivationReason: string;
   reminderTime: string;
+  followUpAnswers: FollowUpAnswer[];
+  language: string;
 };
 
 export const defaultOnboardingProfile: OnboardingProfile = {
@@ -45,6 +54,8 @@ export const defaultOnboardingProfile: OnboardingProfile = {
   sports: ['General fitness', 'Mobility and stretching'],
   motivationReason: 'I want to create discipline',
   reminderTime: 'Evening',
+  followUpAnswers: [],
+  language: 'en',
 };
 
 export const getStoredUser = (): StoredUser | null => {

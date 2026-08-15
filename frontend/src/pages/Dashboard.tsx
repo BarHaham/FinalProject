@@ -1,6 +1,8 @@
 import React, { useEffect, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
+import toast from 'react-hot-toast';
 import AppShell from '../components/AppShell';
+import { PlanBadge, isAiPlan, runPlanGeneration, usePlanStatus } from '../components/PlanStatus';
 import { LessonState, dailyMission as fallbackDailyMission, Mission, pathUnits, practiceCategories, weeklyActivity } from '../data/sportLingoData';
 import api from '../utils/api';
 import { getOnboardingProfile, getStoredUser, StoredUser } from '../utils/storage';
@@ -87,8 +89,41 @@ const Dashboard: React.FC = () => {
     }))
   );
   const [weekDays, setWeekDays] = useState<boolean[]>(Array(7).fill(false));
+  const [bannerDismissed, setBannerDismissed] = useState(() => localStorage.getItem('starterBannerDismissed') === 'true');
+  const [generatingPlan, setGeneratingPlan] = useState(false);
+  const { plan } = usePlanStatus();
   const onboarding = getOnboardingProfile();
-  const { t, tv } = useLanguage();
+  const { t, tv, language } = useLanguage();
+
+  // Offer AI plan generation when the user completed onboarding but ended up
+  // on the static starter path (AI failed or was unavailable at the time).
+  const showStarterBanner = Boolean(
+    plan &&
+    plan.aiEnabled &&
+    !isAiPlan(plan) &&
+    plan.status !== 'generating' &&
+    localStorage.getItem('onboardingProfile') &&
+    !bannerDismissed
+  );
+
+  const dismissBanner = () => {
+    localStorage.setItem('starterBannerDismissed', 'true');
+    setBannerDismissed(true);
+  };
+
+  const generatePlanNow = async () => {
+    const storedUser = getStoredUser();
+    if (!storedUser || generatingPlan) return;
+    setGeneratingPlan(true);
+    const ready = await runPlanGeneration(storedUser.id, language);
+    if (ready) {
+      toast.success(t('plan.regenerateSuccess'));
+      window.location.reload();
+      return;
+    }
+    toast.error(t('plan.regenerateFailed'));
+    setGeneratingPlan(false);
+  };
 
   useEffect(() => {
     const storedUser = getStoredUser();
@@ -152,6 +187,23 @@ const Dashboard: React.FC = () => {
   return (
     <AppShell title={t('dashboard.title')}>
       <div className="grid gap-6">
+        {showStarterBanner && (
+          <section className="flex flex-wrap items-center justify-between gap-4 rounded-md border border-violet-200 bg-violet-50 p-4">
+            <div>
+              <p className="font-black text-violet-900">✨ {t('plan.starterBannerTitle')}</p>
+              <p className="mt-1 text-sm text-violet-700">{t('plan.starterBannerCopy')}</p>
+            </div>
+            <div className="flex items-center gap-3">
+              <button type="button" onClick={generatePlanNow} disabled={generatingPlan} className="btn-primary">
+                {generatingPlan ? t('onboarding.generatingTitle') : t('plan.starterBannerButton')}
+              </button>
+              <button type="button" onClick={dismissBanner} className="text-sm font-black text-violet-400 hover:text-violet-700" aria-label="Dismiss">
+                ✕
+              </button>
+            </div>
+          </section>
+        )}
+
         <section className="grid gap-4 lg:grid-cols-[1.4fr_0.6fr]">
           <div className="rounded-md bg-slate-950 p-6 text-white">
             <p className="text-sm font-black uppercase tracking-wide text-success">{t('dashboard.todayEnough')}</p>
@@ -210,7 +262,10 @@ const Dashboard: React.FC = () => {
           <div className="rounded-md border border-slate-200 bg-white p-5 shadow-sm">
             <div className="flex flex-wrap items-start justify-between gap-3">
               <div>
-                <p className="text-sm font-bold text-primary">{t('mission.today')}</p>
+                <div className="flex flex-wrap items-center gap-2">
+                  <p className="text-sm font-bold text-primary">{t('mission.today')}</p>
+                  <PlanBadge plan={plan} />
+                </div>
                 <h3 className="mt-1 text-2xl font-black">{tv(dailyMission.title)}</h3>
                 <p className="mt-2 text-slate-600">{tv(dailyMission.description)}</p>
               </div>

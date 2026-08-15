@@ -1,4 +1,5 @@
 export type Exercise = {
+  exerciseId?: string;
   name: string;
   duration: string;
   instructions: string;

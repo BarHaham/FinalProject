@@ -1,6 +1,7 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { Link } from 'react-router-dom';
 import AppShell from '../components/AppShell';
+import { PlanBadge, usePlanStatus } from '../components/PlanStatus';
 import { LessonState, PathUnit, pathUnits } from '../data/sportLingoData';
 import { useLanguage } from '../i18n/LanguageContext';
 import api from '../utils/api';
@@ -17,6 +18,9 @@ type ApiPathLesson = {
   estimated_duration_minutes: number;
   difficulty: string;
   state: LessonState;
+  user_id?: number | null;
+  section_title?: string | null;
+  section_summary?: string | null;
 };
 
 const sectionCopy: Record<number, { title: string; summary: string }> = {
@@ -48,10 +52,14 @@ const groupApiLessons = (lessons: ApiPathLesson[]): PathUnit[] => {
   for (const lesson of lessons) {
     const key = `${lesson.section_number}-${lesson.unit_number}`;
     if (!grouped.has(key)) {
-      const copy = sectionCopy[lesson.section_number] || {
-        title: `Unit ${lesson.section_number}: Bodyweight Training`,
-        summary: 'A focused bodyweight progression for strength, control, and consistency.',
-      };
+      // AI-generated plans carry their own section titles/summaries (already in
+      // the user's language); the static path falls back to the built-in copy.
+      const copy = lesson.section_title
+        ? { title: lesson.section_title, summary: lesson.section_summary || '' }
+        : sectionCopy[lesson.section_number] || {
+          title: `Unit ${lesson.section_number}: Bodyweight Training`,
+          summary: 'A focused bodyweight progression for strength, control, and consistency.',
+        };
 
       grouped.set(key, {
         title: copy.title,
@@ -160,6 +168,7 @@ const unitTheme = (title: string) => {
 const Path: React.FC = () => {
   const { t, tv } = useLanguage();
   const [units, setUnits] = useState<PathUnit[]>(pathUnits);
+  const { plan } = usePlanStatus();
 
   useEffect(() => {
     const user = getStoredUser();
@@ -191,7 +200,10 @@ const Path: React.FC = () => {
     <AppShell title={t('path.title')}>
       <div className="space-y-6">
         <section>
-          <p className="text-sm font-black uppercase tracking-wide text-primary">{t('path.kicker')}</p>
+          <div className="flex flex-wrap items-center gap-2">
+            <p className="text-sm font-black uppercase tracking-wide text-primary">{t('path.kicker')}</p>
+            <PlanBadge plan={plan} />
+          </div>
           <h2 className="mt-2 text-3xl font-black">{t('path.heading')}</h2>
           <p className="mt-2 max-w-2xl text-slate-600">
             {t('path.copy')}
