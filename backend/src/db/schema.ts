@@ -66,7 +66,11 @@ CREATE TABLE IF NOT EXISTS missions (
   created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
   updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
-CREATE UNIQUE INDEX IF NOT EXISTS idx_missions_user_day_type ON missions(user_id, (DATE(created_at)), mission_type);
+-- Only the daily mission is unique per day; 'Extra mission' rows may repeat
+-- so users can keep training the same day.
+DROP INDEX IF EXISTS idx_missions_user_day_type;
+CREATE UNIQUE INDEX IF NOT EXISTS idx_missions_user_daily
+  ON missions(user_id, (DATE(created_at)), mission_type) WHERE mission_type = 'Daily mission';
 
 -- Streaks table
 CREATE TABLE IF NOT EXISTS streaks (

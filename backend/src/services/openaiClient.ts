@@ -7,7 +7,7 @@ export const isAiEnabled = () => Boolean(process.env.OPENAI_API_KEY);
 const getModel = () => process.env.OPENAI_MODEL || 'gpt-5-mini';
 const getTimeoutMs = () => {
   const parsed = Number(process.env.OPENAI_TIMEOUT_MS);
-  return Number.isFinite(parsed) && parsed > 0 ? parsed : 30000;
+  return Number.isFinite(parsed) && parsed > 0 ? parsed : 45000;
 };
 
 let client: OpenAI | null = null;

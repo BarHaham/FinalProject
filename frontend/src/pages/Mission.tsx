@@ -4,7 +4,7 @@ import toast from 'react-hot-toast';
 import ExerciseDemo from '../components/ExerciseDemo';
 import { dailyMission as fallbackDailyMission, Mission as MissionData } from '../data/sportLingoData';
 import { enrichExercisesWithMedia } from '../data/exerciseMedia';
-import api from '../utils/api';
+import api, { hasRealApi } from '../utils/api';
 import { getStoredUser } from '../utils/storage';
 import { useLanguage } from '../i18n/LanguageContext';
 
@@ -220,6 +220,42 @@ const Mission: React.FC = () => {
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
+  // Start the next path lesson right away (streak counts once per day, but
+  // every completed mission still grants its XP).
+  const startNextMission = async () => {
+    const user = getStoredUser();
+    if (!user) return;
+
+    try {
+      const { data } = await api.post(`/missions/next/${user.id}`);
+      const exercises = enrichExercisesWithMedia(data.exercises || []);
+      setDailyMission({
+        id: String(data.id),
+        title: data.title,
+        description: data.description,
+        durationMinutes: data.duration_minutes,
+        difficulty: data.difficulty_level,
+        focus: data.focus_area,
+        xpReward: data.xp_reward,
+        type: data.mission_type,
+        equipment: ['No equipment'],
+        exercises,
+      });
+      setCompletionData(null);
+      setCompleted(false);
+      setCurrentExerciseIndex(0);
+      setPhase('exercise');
+      setIsRunning(false);
+      setSecondsRemaining(getExerciseSeconds(exercises[0]?.duration || '30 seconds'));
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    } catch {
+      toast(t('mission.pathDone'));
+      navigate('/dashboard');
+    }
+  };
+
+  const canStartNext = hasRealApi && /^\d+$/.test(dailyMission.id);
+
   if (completed) {
     const displayStreak = completionData?.streak ?? currentStreak;
     const displayAchievements = completionData?.achievements ?? [];
@@ -243,11 +279,16 @@ const Mission: React.FC = () => {
               </div>
             )}
             <p className="mt-4 text-sm text-slate-500">{t('mission.showedUp')}</p>
-            <div className="mt-6 grid gap-3 sm:grid-cols-2">
+            <div className={`mt-6 grid gap-3 ${canStartNext ? 'sm:grid-cols-3' : 'sm:grid-cols-2'}`}>
               <button onClick={repeatMission} className="btn-secondary">
                 {t('mission.repeatWorkout')}
               </button>
-              <button onClick={completeMission} className="btn-primary">
+              {canStartNext && (
+                <button onClick={startNextMission} className="btn-primary">
+                  {t('mission.nextMission')}
+                </button>
+              )}
+              <button onClick={completeMission} className={canStartNext ? 'btn-secondary' : 'btn-primary'}>
                 {t('mission.saveBack')}
               </button>
             </div>

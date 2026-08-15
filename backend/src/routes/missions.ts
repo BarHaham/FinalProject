@@ -30,8 +30,8 @@ const getMissionTemplateForUser = async (userId: number) => {
     : beginnerDailyMission;
 };
 
-const createMissionForUser = async (userId: number) => {
-  const template = await getMissionTemplateForUser(userId);
+const createMissionForUser = async (userId: number, missionType = 'Daily mission') => {
+  const template = { ...(await getMissionTemplateForUser(userId)), missionType };
 
   const result = await pool.query(
     `INSERT INTO missions (
@@ -85,6 +85,41 @@ router.get('/daily/:userId', async (req, res) => {
     }
 
     const mission = await createMissionForUser(userId);
+    res.status(201).json(mission);
+  } catch (error: any) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+// Get the next mission to train right now (supports multiple missions per day).
+// Returns today's uncompleted daily/extra mission if one exists, otherwise
+// creates an 'Extra mission' from the current path lesson. Streak still counts
+// once per day; XP is granted per completed mission.
+router.post('/next/:userId', async (req, res) => {
+  try {
+    const userId = Number(req.params.userId);
+    const today = new Date().toISOString().split('T')[0];
+
+    const pending = await pool.query(
+      `SELECT * FROM missions
+       WHERE user_id = $1
+        AND DATE(created_at) = $2
+        AND mission_type IN ('Daily mission', 'Extra mission')
+        AND completed = FALSE
+       ORDER BY created_at DESC
+       LIMIT 1`,
+      [userId, today]
+    );
+    if (pending.rows.length > 0) {
+      return res.json(pending.rows[0]);
+    }
+
+    const currentLesson = await getCurrentLesson(userId);
+    if (!currentLesson) {
+      return res.status(404).json({ error: 'Path complete' });
+    }
+
+    const mission = await createMissionForUser(userId, 'Extra mission');
     res.status(201).json(mission);
   } catch (error: any) {
     res.status(500).json({ error: error.message });
