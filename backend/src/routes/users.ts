@@ -9,6 +9,7 @@ import {
   generatePlanForUser,
 } from '../services/planGenerator';
 import { getLatestPlan } from '../services/planService';
+import { getCurrentLeague, processPreviousWeekIfNeeded } from '../services/leagueService';
 import { weekStartDate } from '../services/userState';
 import { ExerciseLanguage } from '../data/exerciseLibrary';
 
@@ -205,13 +206,16 @@ router.post('/:id/activity', async (req, res) => {
       return res.status(404).json({ error: 'User not found' });
     }
 
-    // Keep active users visible on this week's leaderboard even before
-    // they complete a mission (0 XP row, one per week).
+    // Settle last week's league promotions/demotions if this is the first
+    // request of a new week, then keep the user visible on this week's board
+    // in their current league (0 XP row until they complete a mission).
+    await processPreviousWeekIfNeeded();
+    const league = await getCurrentLeague(Number(id));
     await pool.query(
       `INSERT INTO leaderboard (user_id, league, weekly_xp, week_start_date)
-       VALUES ($1, 'Bronze', 0, $2)
+       VALUES ($1, $3, 0, $2)
        ON CONFLICT (user_id, week_start_date) DO NOTHING`,
-      [id, weekStartDate()]
+      [id, weekStartDate(), league]
     );
 
     res.json(result.rows[0]);

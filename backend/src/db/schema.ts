@@ -30,6 +30,13 @@ ALTER TABLE users ADD COLUMN IF NOT EXISTS last_seen_at TIMESTAMP DEFAULT CURREN
 ALTER TABLE users ADD COLUMN IF NOT EXISTS preferred_language VARCHAR(5);
 ALTER TABLE users ADD COLUMN IF NOT EXISTS onboarding_completed_at TIMESTAMP;
 ALTER TABLE users ADD COLUMN IF NOT EXISTS onboarding_answers JSONB;
+ALTER TABLE users ADD COLUMN IF NOT EXISTS current_league VARCHAR(20) DEFAULT 'Bronze';
+
+-- Weekly league processing markers (one row per processed week)
+CREATE TABLE IF NOT EXISTS league_weeks (
+  week_start_date DATE PRIMARY KEY,
+  processed_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
 
 -- Equipment table
 CREATE TABLE IF NOT EXISTS equipment (

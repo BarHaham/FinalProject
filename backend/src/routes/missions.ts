@@ -3,6 +3,7 @@ import pool from '../db/connection';
 import { beginnerDailyMission, practiceSessions } from '../data/content';
 import { calculateLevel, weekStartDate } from '../services/userState';
 import { getActivePlan, getCurrentLesson, getCurrentLessonForPlan } from '../services/planService';
+import { processPreviousWeekIfNeeded } from '../services/leagueService';
 import { authenticateToken } from '../middleware/auth';
 
 const router = express.Router();
@@ -173,6 +174,7 @@ router.get('/user/:userId', async (req, res) => {
 
 // Complete mission and update XP, streak, path, achievements, and weekly leaderboard
 router.post('/:missionId/complete', async (req, res) => {
+  await processPreviousWeekIfNeeded();
   const client = await pool.connect();
 
   try {
@@ -315,12 +317,14 @@ router.post('/:missionId/complete', async (req, res) => {
     }
 
     const weekStart = weekStartDate();
+    const leagueRow = await client.query('SELECT current_league FROM users WHERE id = $1', [mission.user_id]);
+    const currentLeague = leagueRow.rows[0]?.current_league || 'Bronze';
     await client.query(
       `INSERT INTO leaderboard (user_id, league, weekly_xp, rank_position, week_start_date)
-       VALUES ($1, 'Bronze', $2, 1, $3)
+       VALUES ($1, $4, $2, 1, $3)
        ON CONFLICT (user_id, week_start_date)
-       DO UPDATE SET weekly_xp = leaderboard.weekly_xp + $2`,
-      [mission.user_id, mission.xp_reward, weekStart]
+       DO UPDATE SET weekly_xp = leaderboard.weekly_xp + $2, league = EXCLUDED.league`,
+      [mission.user_id, mission.xp_reward, weekStart, currentLeague]
     );
 
     await client.query('COMMIT');

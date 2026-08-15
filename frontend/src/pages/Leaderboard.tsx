@@ -157,6 +157,28 @@ const Leaderboard: React.FC = () => {
             </div>
           )}
         </section>
+
+        <section className="rounded-md border border-slate-200 bg-white p-5 shadow-sm">
+          <h3 className="text-xl font-black">🏆 {t('leaderboard.howTitle')}</h3>
+          <ul className="mt-4 space-y-3 text-slate-600">
+            <li className="flex gap-3">
+              <span aria-hidden="true">📈</span>
+              <span>{t('leaderboard.rulePromote')}</span>
+            </li>
+            <li className="flex gap-3">
+              <span aria-hidden="true">📉</span>
+              <span>{t('leaderboard.ruleDemote')}</span>
+            </li>
+            <li className="flex gap-3">
+              <span aria-hidden="true">🔄</span>
+              <span>{t('leaderboard.ruleReset')}</span>
+            </li>
+            <li className="flex gap-3">
+              <span aria-hidden="true">🥇</span>
+              <span>{t('leaderboard.ruleLeagues')}</span>
+            </li>
+          </ul>
+        </section>
       </div>
     </AppShell>
   );

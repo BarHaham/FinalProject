@@ -1,6 +1,7 @@
 import express from 'express';
 import pool from '../db/connection';
 import { weekStartDate } from '../services/userState';
+import { processPreviousWeekIfNeeded } from '../services/leagueService';
 import { authenticateToken } from '../middleware/auth';
 
 const router = express.Router();
@@ -9,6 +10,7 @@ router.use(authenticateToken);
 // Get leaderboard for current week
 router.get('/current/:league', async (req, res) => {
   try {
+    await processPreviousWeekIfNeeded();
     const { league } = req.params;
     // Must match the week bucket used when XP is written on mission completion.
     const weekStart = weekStartDate();
@@ -46,6 +48,7 @@ router.get('/', async (req, res) => {
 // Get user rank — computed live from this week's XP within the league
 router.get('/user/:userId', async (req, res) => {
   try {
+    await processPreviousWeekIfNeeded();
     const { userId } = req.params;
     const weekStart = weekStartDate();
 
