@@ -204,7 +204,7 @@ const Path: React.FC = () => {
             <p className="text-sm font-black uppercase tracking-wide text-primary">{t('path.kicker')}</p>
             <PlanBadge plan={plan} />
           </div>
-          <h2 className="mt-2 text-3xl font-black">{t('path.heading')}</h2>
+          <h2 className="mt-2 text-2xl font-black sm:text-3xl">{t('path.heading')}</h2>
           <p className="mt-2 max-w-2xl text-slate-600">
             {t('path.copy')}
           </p>

@@ -28,7 +28,7 @@ const DynamicQuestionStep: React.FC<DynamicQuestionStepProps> = ({
 }) => (
   <div>
     <p className="text-sm font-black uppercase tracking-wide text-primary">{kicker}</p>
-    <h1 className="mt-2 text-3xl font-black">{question.question}</h1>
+    <h1 className="mt-2 text-2xl font-black sm:text-3xl">{question.question}</h1>
     <p className="mt-2 text-sm text-slate-500">{copy}</p>
     <div className="mt-5 grid gap-3">
       {question.options.map((option) => (

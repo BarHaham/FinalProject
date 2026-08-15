@@ -78,14 +78,14 @@ const Leaderboard: React.FC = () => {
       <div className="grid gap-6">
         <section>
           <p className="text-sm font-black uppercase tracking-wide text-primary">{t('leaderboard.kicker')}</p>
-          <h2 className="mt-2 text-3xl font-black">{t('leaderboard.heading')}</h2>
+          <h2 className="mt-2 text-2xl font-black sm:text-3xl">{t('leaderboard.heading')}</h2>
           <p className="mt-2 max-w-2xl text-slate-600">{t('leaderboard.copy')}</p>
         </section>
 
         {userRank && (
           <section className="rounded-md border border-slate-200 bg-white p-5 shadow-sm">
             <p className="text-sm font-bold text-slate-500">{t('leaderboard.yourRank')}</p>
-            <div className="mt-3 flex items-center gap-6">
+            <div className="mt-3 flex flex-wrap items-center gap-x-6 gap-y-3">
               <div>
                 <p className={`text-2xl font-black ${leagueColor[userRank.league] || 'text-primary'}`}>
                   {userRank.league}
@@ -107,7 +107,7 @@ const Leaderboard: React.FC = () => {
         <section className="rounded-md border border-slate-200 bg-white p-5 shadow-sm">
           <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
             <h3 className="text-xl font-black">{t('leaderboard.rankings')}</h3>
-            <div className="flex gap-2">
+            <div className="flex flex-wrap gap-2">
               {LEAGUE_ORDER.map((league) => (
                 <button
                   key={league}

@@ -1485,3 +1485,83 @@ body {
     @apply rounded-md bg-slate-100 px-3 py-2 text-sm font-black text-slate-600;
   }
 }
+
+/* ------------------------------------------------------------------ */
+/* Mobile adjustments for the exercise demo scenes.                    */
+/* The stick-figure parts are absolutely positioned in px, so on       */
+/* narrow phones we uniformly scale the (non-animated) wrapper of      */
+/* each scene and shrink the overlay pills/labels.                     */
+@media (max-width: 480px) {
+  .sd-track {
+    width: 100%;
+    gap: 10px;
+    transform: scale(0.88);
+    transform-origin: center;
+  }
+
+  .sd-step {
+    min-height: 176px;
+    border-width: 3px;
+  }
+
+  .sd-label {
+    font-size: 0.8rem;
+  }
+
+  .sd-cue {
+    font-size: 0.66rem;
+  }
+
+  .ho-sequence {
+    width: 98%;
+    gap: 10px;
+    transform: scale(0.88);
+    transform-origin: center;
+  }
+
+  .lb-scene {
+    transform: scale(0.8);
+    transform-origin: center;
+  }
+
+  .jj-figure,
+  .ac-figure {
+    transform-origin: center;
+    scale: 0.9;
+  }
+
+  .sd-badge,
+  .sd-focus,
+  .lb-badge,
+  .lb-cue,
+  .jj-badge,
+  .ac-badge,
+  .ho-badge {
+    font-size: 0.6rem;
+    padding: 0.3rem 0.55rem;
+  }
+
+  .sd-badge,
+  .lb-badge,
+  .jj-badge,
+  .ac-badge,
+  .ho-badge {
+    left: 10px;
+    top: 10px;
+  }
+
+  .sd-focus {
+    right: 10px;
+    top: 10px;
+  }
+
+  .lb-cue-left {
+    left: 10px;
+    bottom: 10px;
+  }
+
+  .lb-cue-right {
+    right: 10px;
+    bottom: 10px;
+  }
+}

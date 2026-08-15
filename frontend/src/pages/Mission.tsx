@@ -265,7 +265,7 @@ const Mission: React.FC = () => {
         <div className="mx-auto grid min-h-[calc(100vh-4rem)] max-w-lg place-items-center">
           <section className="w-full rounded-md bg-white p-6 text-center text-slate-900 shadow-2xl">
             <p className="text-sm font-black uppercase tracking-wide text-success">{t('mission.complete')}</p>
-            <h1 className="mt-3 text-4xl font-black">{t('mission.greatJob')}</h1>
+            <h1 className="mt-3 text-3xl font-black sm:text-4xl">{t('mission.greatJob')}</h1>
             <p className="mt-2 text-lg font-bold text-slate-700">{tv(dailyMission.title)}</p>
             <p className="mt-1 text-slate-500">{tv(dailyMission.focus)} · {dailyMission.durationMinutes} {t('unit.min')}</p>
             <div className="mt-6 grid grid-cols-3 gap-3">
@@ -302,10 +302,10 @@ const Mission: React.FC = () => {
     <div className="min-h-screen bg-slate-50">
       <header className="bg-slate-950 px-4 py-5 text-white">
         <div className="mx-auto max-w-6xl">
-          <div className="grid gap-4 lg:grid-cols-[1fr_auto_auto] lg:items-start">
-            <div>
+          <div className="grid grid-cols-2 gap-4 lg:grid-cols-[1fr_auto_auto] lg:items-start">
+            <div className="col-span-2 lg:col-span-1">
               <Link to="/dashboard" className="text-sm font-bold text-slate-300 hover:text-white">{t('mission.back')}</Link>
-              <h1 className="mt-2 text-3xl font-black">{tv(dailyMission.title)}</h1>
+              <h1 className="mt-2 text-2xl font-black sm:text-3xl">{tv(dailyMission.title)}</h1>
               <p className="mt-1 text-slate-300">{tv(dailyMission.focus)} · {dailyMission.durationMinutes} {t('unit.min')} · +{dailyMission.xpReward} XP</p>
             </div>
             <div className={`rounded-md bg-white/10 px-4 py-3 ${isHebrew ? 'text-left' : 'text-right'}`}>
@@ -342,14 +342,14 @@ const Mission: React.FC = () => {
 
           <aside className="rounded-md border border-slate-200 bg-white p-5 shadow-sm">
             <p className="text-sm font-black text-primary">{t('mission.exercise')} {currentExerciseIndex + 1} {t('mission.of')} {dailyMission.exercises.length}</p>
-            <h2 className="mt-2 text-4xl font-black text-slate-950">{phase === 'rest' ? 'Rest' : tv(currentExercise.name)}</h2>
+            <h2 className="mt-2 text-3xl font-black text-slate-950 sm:text-4xl">{phase === 'rest' ? 'Rest' : tv(currentExercise.name)}</h2>
             <p className="mt-2 text-slate-600">
               {phase === 'rest' ? `Next: ${nextExercise ? tv(nextExercise.name) : t('mission.completionScreen')}` : currentExercise.duration}
             </p>
 
             <div className="mt-5 rounded-md bg-slate-50 p-4">
-              <div className="mx-auto grid h-44 w-44 place-items-center rounded-full bg-white shadow-inner ring-8 ring-primary/10">
-                <span className="text-6xl font-black text-primary">{secondsRemaining}</span>
+              <div className="mx-auto grid h-36 w-36 place-items-center rounded-full bg-white shadow-inner ring-8 ring-primary/10 sm:h-44 sm:w-44">
+                <span className="text-5xl font-black text-primary sm:text-6xl">{secondsRemaining}</span>
               </div>
               <div className="mt-5 grid grid-cols-2 gap-3">
                 <button onClick={() => setIsRunning((current) => !current)} className="btn-secondary">

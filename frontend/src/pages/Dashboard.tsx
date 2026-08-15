@@ -209,7 +209,7 @@ const Dashboard: React.FC = () => {
         <section className="grid gap-4 lg:grid-cols-[1.4fr_0.6fr]">
           <div className="rounded-md bg-slate-950 p-6 text-white">
             <p className="text-sm font-black uppercase tracking-wide text-success">{t('dashboard.todayEnough')}</p>
-            <h2 className="mt-2 text-3xl font-black">{t('dashboard.welcomeBack')}, {user?.name || t('dashboard.fallbackName')}.</h2>
+            <h2 className="mt-2 text-2xl font-black sm:text-3xl">{t('dashboard.welcomeBack')}, {user?.name || t('dashboard.fallbackName')}.</h2>
             <p className="mt-3 max-w-2xl text-slate-300">
               {tv(onboarding.motivationReason) || t('dashboard.defaultMotivation')} {formatText(t('dashboard.missionReady'), { minutes: onboarding.dailyTimeGoal })}
             </p>
@@ -225,7 +225,7 @@ const Dashboard: React.FC = () => {
 
           <div className="rounded-md border border-slate-200 bg-white p-5 shadow-sm">
             <p className="text-sm font-bold text-slate-500">{t('dashboard.currentStreak')}</p>
-            <p className="mt-2 text-5xl font-black text-primary">{streak.current_streak}</p>
+            <p className="mt-2 text-4xl font-black text-primary sm:text-5xl">{streak.current_streak}</p>
             <p className="mt-1 text-sm text-slate-500">{formatText(t('dashboard.longestStreak'), { days: streak.longest_streak })}</p>
             <div className="mt-5 grid grid-cols-7 gap-2">
               {weeklyActivity.map((day, index) => (

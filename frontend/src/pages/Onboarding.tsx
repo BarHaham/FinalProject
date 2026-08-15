@@ -222,7 +222,7 @@ const Onboarding: React.FC = () => {
         <section className="rounded-md border border-slate-200 bg-white p-5 shadow-sm">
           {step === 0 && (
             <div>
-              <h1 className="text-3xl font-black">{t('onboarding.goalQuestion')}</h1>
+              <h1 className="text-2xl font-black sm:text-3xl">{t('onboarding.goalQuestion')}</h1>
               <div className="mt-5 grid gap-3">
                 {goals.map((goal) => (
                   <button
@@ -240,7 +240,7 @@ const Onboarding: React.FC = () => {
 
           {step === 1 && (
             <div>
-              <h1 className="text-3xl font-black">{t('onboarding.timeQuestion')}</h1>
+              <h1 className="text-2xl font-black sm:text-3xl">{t('onboarding.timeQuestion')}</h1>
               <p className="mt-2 text-slate-600">{t('onboarding.timeCopy')}</p>
               <div className="mt-5 grid grid-cols-2 gap-3 sm:grid-cols-5">
                 {[1, 2, 5, 10, 15].map((minutes) => (
@@ -259,7 +259,7 @@ const Onboarding: React.FC = () => {
 
           {step === 2 && (
             <div>
-              <h1 className="text-3xl font-black">{t('onboarding.levelQuestion')}</h1>
+              <h1 className="text-2xl font-black sm:text-3xl">{t('onboarding.levelQuestion')}</h1>
               <div className="mt-5 grid gap-3">
                 {[
                   ['Complete beginner', 'I rarely exercise and want to start slowly.'],
@@ -283,7 +283,7 @@ const Onboarding: React.FC = () => {
 
           {step === 3 && (
             <div>
-              <h1 className="text-3xl font-black">{t('onboarding.detailsQuestion')}</h1>
+              <h1 className="text-2xl font-black sm:text-3xl">{t('onboarding.detailsQuestion')}</h1>
               <p className="mt-2 text-sm text-slate-600">
                 {t('onboarding.medical')}
               </p>
@@ -309,7 +309,7 @@ const Onboarding: React.FC = () => {
 
           {step === 4 && (
             <div>
-              <h1 className="text-3xl font-black">{t('onboarding.equipmentQuestion')}</h1>
+              <h1 className="text-2xl font-black sm:text-3xl">{t('onboarding.equipmentQuestion')}</h1>
               <div className="mt-5 grid gap-3 sm:grid-cols-2">
                 {equipmentOptions.map((item) => (
                   <button key={item} type="button" onClick={() => toggleListValue('equipment', item)} className={`choice-button ${profile.equipment.includes(item) ? 'choice-button-active' : ''}`}>
@@ -341,7 +341,7 @@ const Onboarding: React.FC = () => {
 
           {step === motivationStep && (
             <div>
-              <h1 className="text-3xl font-black">{t('onboarding.motivationQuestion')}</h1>
+              <h1 className="text-2xl font-black sm:text-3xl">{t('onboarding.motivationQuestion')}</h1>
               <div className="mt-5 grid gap-3">
                 {[
                   'I want to feel healthier',
@@ -360,7 +360,7 @@ const Onboarding: React.FC = () => {
 
           {step === summaryStep && (
             <div>
-              <h1 className="text-3xl font-black">{t('onboarding.summaryTitle')}</h1>
+              <h1 className="text-2xl font-black sm:text-3xl">{t('onboarding.summaryTitle')}</h1>
               <div className="mt-5 grid gap-3 text-slate-700">
                 <p><strong>{t('onboarding.goal')}:</strong> {tv(profile.mainGoal)}</p>
                 <p><strong>{t('onboarding.level')}:</strong> {tv(profile.fitnessLevel)}</p>

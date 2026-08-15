@@ -10,7 +10,7 @@ const Practice: React.FC = () => {
     <AppShell title={t('practice.title')}>
       <section className="mb-6">
         <p className="text-sm font-black uppercase tracking-wide text-primary">{t('practice.kicker')}</p>
-        <h2 className="mt-2 text-3xl font-black">{t('practice.heading')}</h2>
+        <h2 className="mt-2 text-2xl font-black sm:text-3xl">{t('practice.heading')}</h2>
         <p className="mt-2 max-w-2xl text-slate-600">
           {t('practice.copy')}
         </p>

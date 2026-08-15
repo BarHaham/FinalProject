@@ -75,7 +75,7 @@ const Progress: React.FC = () => {
       <div className="grid gap-6">
         <section>
           <p className="text-sm font-black uppercase tracking-wide text-primary">{t('progress.kicker')}</p>
-          <h2 className="mt-2 text-3xl font-black">{t('progress.heading')}</h2>
+          <h2 className="mt-2 text-2xl font-black sm:text-3xl">{t('progress.heading')}</h2>
           <p className="mt-2 max-w-2xl text-slate-600">{t('progress.copy')}</p>
         </section>
 
