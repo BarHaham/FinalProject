@@ -100,6 +100,16 @@ const difficultyCeiling = (fitnessLevel: string | null): ExerciseDifficulty => {
   return 'beginner';
 };
 
+// Models satisfice on ranges ("3 to 5" reliably yields 3), so the code picks
+// an exact per-section lesson count and the prompt demands exactly that.
+// More experienced users get longer paths.
+const lessonsPerSectionFor = (fitnessLevel: string | null): number => {
+  const level = String(fitnessLevel || '').toLowerCase();
+  if (level.includes('advanced') || level.includes('intermediate')) return 5;
+  if (level.includes('complete')) return 3;
+  return 4;
+};
+
 const clamp = (value: number, min: number, max: number) =>
   Math.min(max, Math.max(min, Math.round(Number(value) || min)));
 
@@ -173,6 +183,8 @@ const followUpAnswersText = (answers: unknown): string => {
 
 const buildPrompt = (profile: UserProfile, allowed: LibraryExercise[], language: ExerciseLanguage) => {
   const targetMinutes = clamp(profile.preferred_workout_duration || 5, 1, 15);
+  const lessonsPerSection = lessonsPerSectionFor(profile.fitness_level);
+  const totalLessons = lessonsPerSection * 5;
   const responseLanguage = language === 'he' ? 'Hebrew' : 'English';
   const system = [
     'You are an expert fitness coach building a Duolingo-style progressive training path for one specific user.',
@@ -181,7 +193,7 @@ const buildPrompt = (profile: UserProfile, allowed: LibraryExercise[], language:
     `- Every lesson must take roughly ${targetMinutes} minutes (within 2 minutes either way).`,
     '- The FIRST exercise of every lesson must be from the warmup category.',
     '- Progress difficulty gradually across sections; early lessons easier, later lessons harder.',
-    '- EXACTLY 5 sections. Each section has 3 to 5 lessons (15 to 25 lessons total). Never give a section fewer than 3 lessons. 3 to 7 exercises per lesson.',
+    `- EXACTLY 5 sections with EXACTLY ${lessonsPerSection} lessons each — ${totalLessons} lessons in total. Count them before answering. 3 to 7 exercises per lesson.`,
     '- xpReward between 10 and 40, higher for longer/harder lessons.',
     '- lessonType is a short focus label such as "Core", "Legs", "Cardio", "Mobility", "Full body" — never the word "lesson".',
     '- For doseType "time", amount is seconds (10-90). For "reps", amount is repetitions (4-20). Use perSide=true for one-sided moves.',
@@ -310,7 +322,7 @@ const repairPlan = (plan: AiPlan, allowed: LibraryExercise[]): RepairedLesson[] 
 
 // Structural validation used inside the AI retry loop: cheap checks whose
 // failures are worth a model retry (deeper repair happens in repairPlan).
-const validateStructure = (plan: AiPlan, allowedIds: Set<string>): string | null => {
+const validateStructure = (plan: AiPlan, allowedIds: Set<string>, targetLessons: number): string | null => {
   if (!Array.isArray(plan.sections) || plan.sections.length < 4) {
     return 'The plan must contain exactly 5 sections.';
   }
@@ -318,8 +330,8 @@ const validateStructure = (plan: AiPlan, allowedIds: Set<string>): string | null
     (section.lessons || []).flatMap((lesson) => lesson.exercises || [])
   );
   const totalLessons = plan.sections.reduce((count, section) => count + (section.lessons || []).length, 0);
-  if (totalLessons < 15) {
-    return `Only ${totalLessons} lessons returned; the plan needs 15 to 25 lessons (3 to 5 per section).`;
+  if (totalLessons < targetLessons - 3) {
+    return `Only ${totalLessons} lessons returned; the plan must contain exactly ${targetLessons} lessons (${targetLessons / 5} per section).`;
   }
   if (allExercises.length === 0) {
     return 'Lessons contained no exercises.';
@@ -366,11 +378,12 @@ export const generatePlanForUser = async (
 
   try {
     const { system, user } = buildPrompt(profile, allowed, language);
+    const targetLessons = lessonsPerSectionFor(profile.fitness_level) * 5;
     const aiPlan = await completeJson<AiPlan>({
       system,
       user,
       schema: PLAN_SCHEMA,
-      validate: (plan) => validateStructure(plan, allowedIds),
+      validate: (plan) => validateStructure(plan, allowedIds, targetLessons),
       maxRetries: 1,
     });
 
