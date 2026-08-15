@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import toast from 'react-hot-toast';
 import AppShell from '../components/AppShell';
+import PlanGeneratingScreen from '../components/PlanGeneratingScreen';
 import { PlanBadge, isAiPlan, runPlanGeneration, usePlanStatus } from '../components/PlanStatus';
 import { LessonState, dailyMission as fallbackDailyMission, Mission, pathUnits, practiceCategories, weeklyActivity } from '../data/sportLingoData';
 import api from '../utils/api';
@@ -186,6 +187,7 @@ const Dashboard: React.FC = () => {
 
   return (
     <AppShell title={t('dashboard.title')}>
+      {generatingPlan && <PlanGeneratingScreen />}
       <div className="grid gap-6">
         {showStarterBanner && (
           <section className="flex flex-wrap items-center justify-between gap-4 rounded-md border border-violet-200 bg-violet-50 p-4">

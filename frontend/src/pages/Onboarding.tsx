@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useRef, useState } from 'react';
+import React, { useMemo, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import toast from 'react-hot-toast';
 import {
@@ -11,6 +11,7 @@ import {
 } from '../utils/storage';
 import api, { hasRealApi } from '../utils/api';
 import DynamicQuestionStep, { DynamicQuestion } from '../components/DynamicQuestionStep';
+import PlanGeneratingScreen from '../components/PlanGeneratingScreen';
 import { formatText, useLanguage } from '../i18n/LanguageContext';
 
 const goals = [
@@ -26,13 +27,6 @@ const goals = [
 const equipmentOptions = ['No equipment', 'Chair', 'Yoga mat', 'Resistance bands', 'Dumbbells', 'Running area'];
 const sportOptions = ['General fitness', 'Strength training', 'Cardio', 'Running', 'Basketball', 'Mobility and stretching', 'Core training'];
 
-const GENERATING_MESSAGE_KEYS = [
-  'onboarding.generating1',
-  'onboarding.generating2',
-  'onboarding.generating3',
-  'onboarding.generating4',
-];
-
 const sleep = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
 
 const Onboarding: React.FC = () => {
@@ -43,7 +37,6 @@ const Onboarding: React.FC = () => {
   const [dynamicAnswers, setDynamicAnswers] = useState<Record<string, string[]>>({});
   const [saving, setSaving] = useState(false);
   const [generating, setGenerating] = useState(false);
-  const [generatingMessageIndex, setGeneratingMessageIndex] = useState(0);
   const questionsRequested = useRef(false);
   const { t, tv, isHebrew, language } = useLanguage();
 
@@ -66,17 +59,6 @@ const Onboarding: React.FC = () => {
   const dynamicStepEnd = dynamicStepStart + aiQuestions.length; // exclusive
   const motivationStep = dynamicStepEnd;
   const summaryStep = dynamicStepEnd + 1;
-
-  useEffect(() => {
-    if (generating) {
-      const timer = window.setInterval(
-        () => setGeneratingMessageIndex((current) => (current + 1) % GENERATING_MESSAGE_KEYS.length),
-        2500
-      );
-      return () => window.clearInterval(timer);
-    }
-    return undefined;
-  }, [generating]);
 
   // Prefetch the AI follow-up questions once the core answers (goal, time,
   // level) exist. Fired when leaving the level step so the network time is
@@ -221,16 +203,7 @@ const Onboarding: React.FC = () => {
   };
 
   if (generating) {
-    return (
-      <div className="grid min-h-screen place-items-center bg-slate-950 px-4 text-white">
-        <div className="max-w-md text-center">
-          <div className="mx-auto h-16 w-16 animate-spin rounded-full border-4 border-white/20 border-t-primary" />
-          <h1 className="mt-8 text-3xl font-black">{t('onboarding.generatingTitle')}</h1>
-          <p className="mt-4 text-lg font-bold text-orange-200">{t(GENERATING_MESSAGE_KEYS[generatingMessageIndex])}</p>
-          <p className="mt-6 text-sm text-slate-400">{t('onboarding.generatingHint')}</p>
-        </div>
-      </div>
-    );
+    return <PlanGeneratingScreen />;
   }
 
   return (

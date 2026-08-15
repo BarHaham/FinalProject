@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import toast from 'react-hot-toast';
 import AppShell from '../components/AppShell';
+import PlanGeneratingScreen from '../components/PlanGeneratingScreen';
 import { PlanBadge, isAiPlan, runPlanGeneration, usePlanStatus } from '../components/PlanStatus';
 import { achievements } from '../data/sportLingoData';
 import { getStoredUser } from '../utils/storage';
@@ -116,6 +117,7 @@ const Profile: React.FC = () => {
 
   return (
     <AppShell title={t('profile.title')}>
+      {regenerating && <PlanGeneratingScreen />}
       <div className="grid gap-6">
         <section className="rounded-md border border-slate-200 bg-white p-5 shadow-sm">
           <div className="mb-6 flex flex-wrap items-center justify-between gap-3">
