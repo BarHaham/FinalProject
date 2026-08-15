@@ -7,8 +7,13 @@ export const isAiEnabled = () => Boolean(process.env.OPENAI_API_KEY);
 const getModel = () => process.env.OPENAI_MODEL || 'gpt-5-mini';
 const getTimeoutMs = () => {
   const parsed = Number(process.env.OPENAI_TIMEOUT_MS);
-  return Number.isFinite(parsed) && parsed > 0 ? parsed : 45000;
+  return Number.isFinite(parsed) && parsed > 0 ? parsed : 60000;
 };
+
+// gpt-5 family models are reasoning models: without this they "think" at
+// medium effort before emitting the (large) JSON plan and can blow the
+// request timeout. Minimal effort goes straight to the structured output.
+const isReasoningModel = (model: string) => model.startsWith('gpt-5') || /^o\d/.test(model);
 
 let client: OpenAI | null = null;
 const getClient = (): OpenAI => {
@@ -61,7 +66,7 @@ export const completeJson = async <T>(options: CompleteJsonOptions<T>): Promise<
   for (let attempt = 0; attempt <= maxRetries; attempt += 1) {
     let response;
     try {
-      response = await getClient().chat.completions.create({
+      const params: Record<string, unknown> = {
         model: getModel(),
         messages,
         response_format: {
@@ -72,7 +77,11 @@ export const completeJson = async <T>(options: CompleteJsonOptions<T>): Promise<
             schema: options.schema.schema as Record<string, unknown>,
           },
         },
-      });
+      };
+      if (isReasoningModel(getModel())) {
+        params.reasoning_effort = 'minimal';
+      }
+      response = await getClient().chat.completions.create(params as any);
     } catch (apiError: any) {
       // Transient API/network/timeout failures also deserve the retry budget.
       lastError = `API error: ${String(apiError?.message || apiError).slice(0, 200)}`;
@@ -85,7 +94,8 @@ export const completeJson = async <T>(options: CompleteJsonOptions<T>): Promise<
     try {
       parsed = JSON.parse(content) as T;
     } catch {
-      lastError = 'Response was not valid JSON.';
+      // finish_reason 'length' = the model ran out of output tokens mid-JSON.
+      lastError = `Response was not valid JSON (finish_reason: ${response.choices[0]?.finish_reason || 'unknown'}, length: ${content.length}).`;
     }
 
     if (parsed !== null) {
