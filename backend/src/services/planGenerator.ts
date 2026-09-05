@@ -330,7 +330,12 @@ const validateStructure = (plan: AiPlan, allowedIds: Set<string>, targetLessons:
     (section.lessons || []).flatMap((lesson) => lesson.exercises || [])
   );
   const totalLessons = plan.sections.reduce((count, section) => count + (section.lessons || []).length, 0);
-  if (totalLessons < targetLessons - 3) {
+  // The prompt asks for the exact per-level target as a nudge, but a plan is
+  // only rejected below the floor every model reliably clears (15 lessons =
+  // 3 per section). Demanding the full target caused small models to fail
+  // validation on every attempt.
+  const minimumLessons = Math.min(15, targetLessons - 3);
+  if (totalLessons < minimumLessons) {
     return `Only ${totalLessons} lessons returned; the plan must contain exactly ${targetLessons} lessons (${targetLessons / 5} per section).`;
   }
   if (allExercises.length === 0) {

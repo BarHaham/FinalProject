@@ -116,13 +116,13 @@ const Dashboard: React.FC = () => {
     const storedUser = getStoredUser();
     if (!storedUser || generatingPlan) return;
     setGeneratingPlan(true);
-    const ready = await runPlanGeneration(storedUser.id, language);
-    if (ready) {
+    const result = await runPlanGeneration(storedUser.id, language);
+    if (result.ready) {
       toast.success(t('plan.regenerateSuccess'));
       window.location.reload();
       return;
     }
-    toast.error(t('plan.regenerateFailed'));
+    toast.error(`${t('plan.regenerateFailed')}${result.error ? `\n(${result.error})` : ''}`, { duration: 10000 });
     setGeneratingPlan(false);
   };
 

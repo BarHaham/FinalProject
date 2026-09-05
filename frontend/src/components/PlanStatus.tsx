@@ -9,7 +9,10 @@ export type PlanInfo = {
   language?: string;
   generated_at?: string | null;
   aiEnabled?: boolean;
+  error?: string | null;
 };
+
+export type PlanGenerationResult = { ready: boolean; error?: string };
 
 export const isAiPlan = (plan: PlanInfo | null) =>
   Boolean(plan && plan.source === 'ai' && plan.status === 'ready');
@@ -39,24 +42,26 @@ export const usePlanStatus = () => {
 // Kicks off AI plan generation and resolves true when the plan is ready.
 // If the synchronous call times out client-side, polls the status endpoint
 // (the server may still finish and commit).
-export const runPlanGeneration = async (userId: number, language: string): Promise<boolean> => {
+export const runPlanGeneration = async (userId: number, language: string): Promise<PlanGenerationResult> => {
   try {
     const { data } = await api.post(`/users/${userId}/plan/generate`, { language }, { timeout: 65000 });
-    return data?.status === 'ready';
-  } catch {
+    if (data?.status === 'ready') return { ready: true };
+    return { ready: false, error: data?.error || data?.status };
+  } catch (requestError: any) {
     // Keep polling for up to 90 more seconds — the server may still finish.
     const deadline = Date.now() + 90000;
     while (Date.now() < deadline) {
       await new Promise((resolve) => setTimeout(resolve, 3000));
       try {
         const { data } = await api.get(`/users/${userId}/plan`);
-        if (data?.status === 'ready') return true;
-        if (data?.status === 'failed' || data?.status === 'none') return false;
-      } catch {
-        return false;
+        if (data?.status === 'ready') return { ready: true };
+        if (data?.status === 'failed') return { ready: false, error: data?.error || 'failed' };
+        if (data?.status === 'none') return { ready: false, error: 'no plan recorded' };
+      } catch (pollError: any) {
+        return { ready: false, error: pollError?.message || 'status check failed' };
       }
     }
-    return false;
+    return { ready: false, error: `timed out waiting (${requestError?.message || 'request failed'})` };
   }
 };
 

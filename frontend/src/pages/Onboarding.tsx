@@ -162,6 +162,7 @@ const Onboarding: React.FC = () => {
     // times out client-side the server may still finish, so poll the plan
     // status for up to 30 more seconds before falling back.
     setGenerating(true);
+    let failureReason = '';
     try {
       const { data } = await api.post(`/users/${user.id}/plan/generate`, { language }, { timeout: 65000 });
       if (data?.status === 'ready') {
@@ -169,6 +170,7 @@ const Onboarding: React.FC = () => {
         navigate('/path');
         return;
       }
+      failureReason = data?.error || data?.status || '';
     } catch {
       // Keep polling for up to 90 more seconds — the server may still finish.
       const deadline = Date.now() + 90000;
@@ -181,14 +183,17 @@ const Onboarding: React.FC = () => {
             navigate('/path');
             return;
           }
-          if (data?.status === 'failed' || data?.status === 'none') break;
+          if (data?.status === 'failed' || data?.status === 'none') {
+            failureReason = data?.error || data?.status || '';
+            break;
+          }
         } catch {
           break;
         }
       }
     }
 
-    toast(t('onboarding.planFailed'));
+    toast(`${t('onboarding.planFailed')}${failureReason ? `\n(${failureReason})` : ''}`, { duration: 10000 });
     navigate('/dashboard');
   };
 

@@ -374,8 +374,13 @@ router.post('/:id/plan/generate', requireSelf, async (req, res) => {
     if (error instanceof PlanGenerationInProgressError) {
       return res.status(409).json({ status: 'generating' });
     }
-    // The user silently stays on the static path; details are in the plan row.
-    res.json({ status: 'failed', fallback: 'static' });
+    // The user stays on the static path; the reason is returned to the owner
+    // (this endpoint is requireSelf) so failures are diagnosable from the UI.
+    res.json({
+      status: 'failed',
+      fallback: 'static',
+      error: String(error?.message || 'Plan generation failed').slice(0, 300),
+    });
   }
 });
 

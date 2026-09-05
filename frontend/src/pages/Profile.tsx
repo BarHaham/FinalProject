@@ -39,11 +39,11 @@ const Profile: React.FC = () => {
     if (!window.confirm(t('plan.regenerateConfirm'))) return;
 
     setRegenerating(true);
-    const ready = await runPlanGeneration(user.id, language);
-    if (ready) {
+    const result = await runPlanGeneration(user.id, language);
+    if (result.ready) {
       toast.success(t('plan.regenerateSuccess'));
     } else {
-      toast.error(t('plan.regenerateFailed'));
+      toast.error(`${t('plan.regenerateFailed')}${result.error ? `\n(${result.error})` : ''}`, { duration: 10000 });
     }
     await refreshPlan();
     setRegenerating(false);
@@ -269,6 +269,11 @@ const Profile: React.FC = () => {
                   <p className="mt-1 text-sm text-slate-500">
                     {t('plan.generatedOn')}: {new Date(plan.generated_at).toLocaleDateString()}
                     {plan.language ? ` · ${t('plan.language')}: ${plan.language === 'he' ? 'עברית' : 'English'}` : ''}
+                  </p>
+                )}
+                {plan.status === 'failed' && plan.error && (
+                  <p className="mt-2 rounded-md bg-rose-50 px-3 py-2 text-xs font-bold text-rose-700 break-words">
+                    Last attempt failed: {plan.error}
                   </p>
                 )}
               </div>
