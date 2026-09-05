@@ -525,6 +525,76 @@ export const exerciseDemos: Record<string, ExerciseDemo> = {
     cues: ['Arms reach ahead', 'Back leg long', 'One straight line'],
     focus: 'Balance + strength',
   },
+
+  // ---- expansion: warmup ----
+  'side-to-side-hops': { labels: ['Feet together', 'Hop over', 'Hop back'], cues: ['Knees soft', 'Imaginary line', 'Quiet landing'], focus: 'Warm-up' },
+  'arm-swings': { labels: ['Open wide', 'Cross front', 'Swap arms'], cues: ['Chest opens', 'Loose swing', 'Alternate top arm'], focus: 'Shoulders + chest' },
+  'hip-circles': { labels: ['Hands on hips', 'Circle', 'Reverse'], cues: ['Knees soft', 'Big slow circle', 'Upper body still'], focus: 'Hips' },
+  'knee-hugs': { labels: ['Step', 'Hug knee', 'Release'], cues: ['Stand tall', 'Knee to chest', 'Switch legs'], focus: 'Hips + glutes' },
+  'wrist-circles': { labels: ['Arms out', 'Circle', 'Reverse'], cues: ['Full slow circles', 'Both wrists', 'Switch direction'], focus: 'Wrists' },
+  'trunk-circles': { labels: ['Wide stance', 'Circle torso', 'Reverse'], cues: ['Hands on hips', 'Small and slow', 'No momentum'], focus: 'Spine + core' },
+
+  // ---- expansion: legs & glutes ----
+  'split-squat': { labels: ['Stagger', 'Lower', 'Rise'], cues: ['Feet planted', 'Both knees 90°', 'Push through front heel'], focus: 'Legs' },
+  'step-up': { labels: ['Foot on chair', 'Drive up', 'Step down'], cues: ['Whole foot', 'Lead with heel', 'Control down'], focus: 'Legs + glutes' },
+  'squat-pulses': { labels: ['Sit low', 'Pulse', 'Stay low'], cues: ['Bottom of squat', 'Tiny movement', 'Chest lifted'], focus: 'Leg endurance' },
+  'glute-kickback': { labels: ['All fours', 'Kick up', 'Lower'], cues: ['Bent knee', 'Heel to ceiling', 'Back flat'], focus: 'Glutes' },
+  'clamshell': { labels: ['Side lying', 'Open knee', 'Close'], cues: ['Feet together', 'Hips stacked', 'Slow lower'], focus: 'Hips + glutes' },
+  'single-leg-calf-raise': { labels: ['One foot', 'Rise', 'Lower'], cues: ['Fingertips on wall', 'Full height', 'Slow down'], focus: 'Calves' },
+  'assisted-pistol-squat': { labels: ['One leg', 'Lower to chair', 'Drive up'], cues: ['Other leg forward', 'Light touch', 'Arms reach'], focus: 'Single-leg strength' },
+  'dumbbell-lunge': { labels: ['Weights at sides', 'Lunge', 'Push back'], cues: ['Torso tall', 'Back knee down', 'Weights still'], focus: 'Legs' },
+  'banded-glute-bridge': { labels: ['Band on', 'Bridge up', 'Press out'], cues: ['Above knees', 'Hips high', 'Knees out'], focus: 'Glutes + hips' },
+  'dumbbell-sumo-squat': { labels: ['Wide stance', 'Squat', 'Stand'], cues: ['Weight hangs down', 'Knees out', 'Chest proud'], focus: 'Glutes + inner thighs' },
+
+  // ---- expansion: core ----
+  'plank-knee-to-elbow': { labels: ['High plank', 'Knee to elbow', 'Return'], cues: ['Same side', 'Hips level', 'Slow control'], focus: 'Core + obliques' },
+  'toe-touch-crunch': { labels: ['Legs up', 'Reach', 'Lower'], cues: ['Legs still', 'Blades lift', 'Neck relaxed'], focus: 'Upper abs' },
+  'heel-taps': { labels: ['Knees up', 'Tap heel', 'Switch'], cues: ['90° knees', 'Brace belly', 'Back stays down'], focus: 'Deep core' },
+  'side-plank-reach-through': { labels: ['Side plank', 'Reach under', 'Open up'], cues: ['Hips lifted', 'Thread the arm', 'Rotate from ribs'], focus: 'Obliques' },
+  'bird-dog-crunch': { labels: ['Extend', 'Crunch in', 'Extend'], cues: ['Balance first', 'Elbow meets knee', 'Back flat'], focus: 'Core stability' },
+  'seated-knee-tucks': { labels: ['Lean back', 'Tuck knees', 'Extend'], cues: ['Hands behind', 'Knees to chest', 'Chest lifted'], focus: 'Lower abs' },
+  'plank-jacks': { labels: ['Plank', 'Feet wide', 'Feet together'], cues: ['Strong line', 'Hop out', 'Hips level'], focus: 'Core + cardio' },
+  'banded-pallof-press': { labels: ['Band at chest', 'Press out', 'Return'], cues: ['Anchor to side', 'Resist twisting', 'Hips square'], focus: 'Anti-rotation core' },
+  'reverse-plank': { labels: ['Sit', 'Lift hips', 'Hold'], cues: ['Hands behind', 'Straight line', 'Look up'], focus: 'Posterior chain' },
+
+  // ---- expansion: upper body ----
+  'wide-pushup': { labels: ['Wide hands', 'Lower', 'Press'], cues: ['Outside shoulders', 'Elbows out', 'Chest works'], focus: 'Chest' },
+  'chair-decline-pushup': { labels: ['Feet on chair', 'Lower', 'Press'], cues: ['Hands on floor', 'Brace hard', 'Shoulders lead'], focus: 'Upper chest + shoulders' },
+  'triceps-kickback': { labels: ['Hinge', 'Extend back', 'Return'], cues: ['Elbows high', 'Straighten fully', 'Forearms only'], focus: 'Arms' },
+  'lateral-raise': { labels: ['Weights at sides', 'Lift out', 'Lower'], cues: ['Slight bend', 'Shoulder height', 'No shrug'], focus: 'Shoulders' },
+  'bent-over-reverse-fly': { labels: ['Hinge', 'Open wide', 'Lower'], cues: ['Flat back', 'Like wings', 'Squeeze blades'], focus: 'Upper back' },
+  'band-row': { labels: ['Band front', 'Pull to ribs', 'Return'], cues: ['Chest tall', 'Elbows back', 'Squeeze the back'], focus: 'Back' },
+  'band-overhead-press': { labels: ['Stand on band', 'Press up', 'Lower'], cues: ['Handles at shoulders', 'Straight overhead', 'Ribs down'], focus: 'Shoulders' },
+  'band-bicep-curl': { labels: ['Stand on band', 'Curl', 'Lower'], cues: ['Palms up', 'Elbows on ribs', 'Fight the band'], focus: 'Arms' },
+  'arm-pulses-overhead': { labels: ['Arms up', 'Pulse back', 'Keep going'], cues: ['Arms long', 'Tiny pulses', 'Ribs down'], focus: 'Shoulder endurance' },
+  'wall-angels': { labels: ['Goalpost', 'Slide up', 'Slide down'], cues: ['Back on wall', 'Keep contact', 'Slow'], focus: 'Posture' },
+
+  // ---- expansion: cardio ----
+  'squat-jacks': { labels: ['Jump wide', 'Land in squat', 'Jump together'], cues: ['Soft landing', 'Chest up', 'Steady rhythm'], focus: 'Cardio + legs' },
+  'tuck-jumps': { labels: ['Load', 'Jump + tuck', 'Land soft'], cues: ['Knees to chest', 'Quiet landing', 'Reset fully'], focus: 'Explosive power' },
+  'boxer-shuffle': { labels: ['Stance', 'Bounce', 'Switch feet'], cues: ['Shoulders loose', 'Balls of feet', 'Light and quick'], focus: 'Light cardio' },
+  'shuttle-runs': { labels: ['Run out', 'Touch', 'Run back'], cues: ['To the marker', 'Bend knees to turn', 'Drive back'], focus: 'Agility + cardio' },
+  'interval-jog': { labels: ['Jog', 'Hold pace', 'Walk'], cues: ['Easy pace', 'Talk-test', 'Recover fully'], focus: 'Endurance' },
+  'punch-and-squat': { labels: ['Punch, punch', 'Squat', 'Stand'], cues: ['Exhale on punches', 'Chest up', 'Steady rhythm'], focus: 'Cardio + full body' },
+  'invisible-jump-rope': { labels: ['Set', 'Tiny hops', 'Turn wrists'], cues: ['Balls of feet', 'Barely off floor', 'Wrists circle'], focus: 'Cardio + coordination' },
+
+  // ---- expansion: full body ----
+  'dumbbell-deadlift-to-row': { labels: ['Hinge', 'Row', 'Stand'], cues: ['Flat back', 'Elbows to ribs', 'Glutes finish'], focus: 'Posterior chain' },
+  'reverse-lunge-knee-drive': { labels: ['Lunge back', 'Drive knee', 'Repeat'], cues: ['Back knee down', 'Knee to hip height', 'Pause on one leg'], focus: 'Legs + balance' },
+  'squat-to-calf-raise': { labels: ['Squat', 'Stand + rise', 'Lower heels'], cues: ['Hips back', 'Onto toes', 'Smooth flow'], focus: 'Legs' },
+  'sit-to-stand': { labels: ['Sit forward', 'Stand', 'Sit slow'], cues: ['No hands', 'Lean slightly forward', 'Drive heels'], focus: 'Functional strength' },
+
+  // ---- expansion: mobility ----
+  'pigeon-stretch': { labels: ['Knee forward', 'Back leg long', 'Sink hips'], cues: ['Shin angled', 'Hips square', 'Breathe'], focus: 'Deep hip opener' },
+  'lying-spinal-twist': { labels: ['Lie back', 'Knee across', 'Look away'], cues: ['Shoulders heavy', 'Knee to floor', 'Breathe out'], focus: 'Lower back release' },
+  'standing-side-bend': { labels: ['Reach up', 'Lean over', 'Return'], cues: ['Grow tall first', 'Long side body', 'No collapsing'], focus: 'Side body' },
+  'wall-chest-stretch': { labels: ['Forearm on wall', 'Turn away', 'Hold'], cues: ['Shoulder height', 'Slow rotation', 'Shoulder down'], focus: 'Chest' },
+  'wall-calf-stretch': { labels: ['Hands on wall', 'Step back', 'Lean in'], cues: ['Heel down', 'Toes forward', 'Feel the calf'], focus: 'Calves' },
+
+  // ---- expansion: balance ----
+  'single-leg-hop-hold': { labels: ['One leg', 'Hop forward', 'Freeze'], cues: ['Soft landing', 'Bent knee', 'Hold 2 seconds'], focus: 'Landing control' },
+  'tandem-stance-hold': { labels: ['Heel to toe', 'Arms down', 'Hold'], cues: ['One foot in front', 'Soft knees', 'Fix your gaze'], focus: 'Static balance' },
+  'eyes-closed-stand': { labels: ['One leg', 'Close eyes', 'Hold'], cues: ['Near a wall', 'Gentle close', 'Open if you wobble'], focus: 'Proprioception' },
 };
 
 export const getExerciseDemo = (key: string) =>

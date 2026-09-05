@@ -126,12 +126,12 @@ const difficultyCeiling = (fitnessLevel: string | null): ExerciseDifficulty => {
 // More experienced users get longer paths.
 const lessonsPerSectionFor = (fitnessLevel: string | null): number => {
   const level = String(fitnessLevel || '').toLowerCase();
-  if (level.includes('advanced') || level.includes('intermediate')) return 6;
-  if (level.includes('complete')) return 4;
-  return 5;
+  if (level.includes('advanced') || level.includes('intermediate')) return 5;
+  if (level.includes('complete')) return 3;
+  return 4;
 };
 
-const MAX_LESSONS = 30;
+const MAX_LESSONS = 25;
 
 // Real lesson length as the mission player will run it: each dose plus the
 // fixed 10s rest between exercises. Reps are ~3s each; per-side doubles.
