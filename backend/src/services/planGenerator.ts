@@ -37,58 +37,79 @@ type AiLesson = {
 type AiSection = { title: string; summary: string; lessons: AiLesson[] };
 type AiPlan = { sections: AiSection[] };
 
-// Strict structured-output schema. Numeric/count ranges are enforced in code
-// (clamped or repaired) to stay within the strict-mode keyword subset.
-const PLAN_SCHEMA = {
-  name: 'training_plan',
-  schema: {
-    type: 'object',
-    additionalProperties: false,
-    required: ['sections'],
-    properties: {
-      sections: {
-        type: 'array',
-        items: {
+const SECTION_COUNT = 5;
+const SECTION_KEYS = Array.from({ length: SECTION_COUNT }, (_, i) => `section${i + 1}`);
+const lessonKeysFor = (count: number) => Array.from({ length: count }, (_, i) => `lesson${i + 1}`);
+
+// Strict structured-output schema. The plan structure is enforced BY THE
+// SCHEMA, not by prose: exactly 5 named section slots, each with exactly N
+// named lesson slots (N depends on the user's level). Small models ignore
+// "exactly 5 sections" in text but cannot omit a required key. Numeric ranges
+// are still clamped in code (min/max keywords are outside the strict subset).
+const buildPlanSchema = (lessonsPerSection: number) => {
+  const lessonKeys = lessonKeysFor(lessonsPerSection);
+  return {
+    name: 'training_plan',
+    schema: {
+      type: 'object',
+      additionalProperties: false,
+      required: SECTION_KEYS,
+      properties: Object.fromEntries(SECTION_KEYS.map((key) => [key, { $ref: '#/$defs/section' }])),
+      $defs: {
+        exercise: {
           type: 'object',
           additionalProperties: false,
-          required: ['title', 'summary', 'lessons'],
+          required: ['exerciseId', 'doseType', 'amount', 'perSide'],
+          properties: {
+            exerciseId: { type: 'string' },
+            doseType: { type: 'string', enum: ['time', 'reps'] },
+            amount: { type: 'integer' },
+            perSide: { type: 'boolean' },
+          },
+        },
+        lesson: {
+          type: 'object',
+          additionalProperties: false,
+          required: ['name', 'lessonType', 'xpReward', 'estimatedDurationMinutes', 'difficulty', 'exercises'],
+          properties: {
+            name: { type: 'string' },
+            lessonType: { type: 'string' },
+            xpReward: { type: 'integer' },
+            estimatedDurationMinutes: { type: 'integer' },
+            difficulty: { type: 'string', enum: ['Easy', 'Beginner', 'Intermediate', 'Advanced', 'Gentle'] },
+            exercises: { type: 'array', items: { $ref: '#/$defs/exercise' } },
+          },
+        },
+        section: {
+          type: 'object',
+          additionalProperties: false,
+          required: ['title', 'summary', ...lessonKeys],
           properties: {
             title: { type: 'string' },
             summary: { type: 'string' },
-            lessons: {
-              type: 'array',
-              items: {
-                type: 'object',
-                additionalProperties: false,
-                required: ['name', 'lessonType', 'xpReward', 'estimatedDurationMinutes', 'difficulty', 'exercises'],
-                properties: {
-                  name: { type: 'string' },
-                  lessonType: { type: 'string' },
-                  xpReward: { type: 'integer' },
-                  estimatedDurationMinutes: { type: 'integer' },
-                  difficulty: { type: 'string', enum: ['Easy', 'Beginner', 'Intermediate', 'Advanced', 'Gentle'] },
-                  exercises: {
-                    type: 'array',
-                    items: {
-                      type: 'object',
-                      additionalProperties: false,
-                      required: ['exerciseId', 'doseType', 'amount', 'perSide'],
-                      properties: {
-                        exerciseId: { type: 'string' },
-                        doseType: { type: 'string', enum: ['time', 'reps'] },
-                        amount: { type: 'integer' },
-                        perSide: { type: 'boolean' },
-                      },
-                    },
-                  },
-                },
-              },
-            },
+            ...Object.fromEntries(lessonKeys.map((key) => [key, { $ref: '#/$defs/lesson' }])),
           },
         },
       },
     },
-  },
+  };
+};
+
+// Convert the slot-keyed response (section1.lesson3 …) into the internal
+// array shape. Tolerant of missing slots so repair still works if a model
+// ever returns a partial structure.
+const toPlan = (raw: any): AiPlan => {
+  const sections: AiSection[] = [];
+  SECTION_KEYS.forEach((sectionKey) => {
+    const section = raw?.[sectionKey];
+    if (!section || typeof section !== 'object') return;
+    const lessons = Object.keys(section)
+      .filter((key) => /^lesson\d+$/.test(key) && section[key])
+      .sort((a, b) => Number(a.slice(6)) - Number(b.slice(6)))
+      .map((key) => section[key] as AiLesson);
+    sections.push({ title: section.title, summary: section.summary, lessons });
+  });
+  return { sections };
 };
 
 const DIFFICULTY_RANK: Record<ExerciseDifficulty, number> = { beginner: 1, intermediate: 2, advanced: 3 };
@@ -193,7 +214,8 @@ const buildPrompt = (profile: UserProfile, allowed: LibraryExercise[], language:
     `- Every lesson must take roughly ${targetMinutes} minutes (within 2 minutes either way).`,
     '- The FIRST exercise of every lesson must be from the warmup category.',
     '- Progress difficulty gradually across sections; early lessons easier, later lessons harder.',
-    `- EXACTLY 5 sections with EXACTLY ${lessonsPerSection} lessons each — ${totalLessons} lessons in total. Count them before answering. 3 to 7 exercises per lesson.`,
+    `- The response format has 5 sections (section1–section5), each with ${lessonsPerSection} lessons (lesson1–lesson${lessonsPerSection}) — ${totalLessons} lessons in total. Fill EVERY slot with a distinct, meaningful lesson of 3 to 7 exercises; never repeat a lesson.`,
+    '- Give each section its own theme (for example: foundations & warmup, lower body, core, upper body, full-body review) and order them as a progression.',
     '- xpReward between 10 and 40, higher for longer/harder lessons.',
     '- lessonType is a short focus label such as "Core", "Legs", "Cardio", "Mobility", "Full body" — never the word "lesson".',
     '- For doseType "time", amount is seconds (10-90). For "reps", amount is repetitions (4-20). Use perSide=true for one-sided moves.',
@@ -245,8 +267,6 @@ type RepairedLesson = {
   lessonNumber: number;
   exercises: { entry: LibraryExercise; dose: ExerciseDose }[];
 };
-
-const SECTION_COUNT = 5;
 
 // Title for a section the model failed to provide: the most common focus
 // label among its lessons (already in the user's language), else a generic
@@ -410,16 +430,17 @@ export const generatePlanForUser = async (
 
   try {
     const { system, user } = buildPrompt(profile, allowed, language);
-    const targetLessons = lessonsPerSectionFor(profile.fitness_level) * 5;
-    const aiPlan = await completeJson<AiPlan>({
+    const lessonsPerSection = lessonsPerSectionFor(profile.fitness_level);
+    const targetLessons = lessonsPerSection * SECTION_COUNT;
+    const rawPlan = await completeJson<unknown>({
       system,
       user,
-      schema: PLAN_SCHEMA,
-      validate: (plan) => validateStructure(plan, allowedIds, targetLessons),
+      schema: buildPlanSchema(lessonsPerSection),
+      validate: (raw) => validateStructure(toPlan(raw), allowedIds, targetLessons),
       maxRetries: 1,
     });
 
-    const lessons = repairPlan(aiPlan, allowed, language);
+    const lessons = repairPlan(toPlan(rawPlan), allowed, language);
     if (lessons.length < 10) {
       throw new Error('Plan had too few usable lessons after validation');
     }
