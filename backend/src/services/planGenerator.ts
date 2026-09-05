@@ -260,10 +260,10 @@ const repairPlan = (plan: AiPlan, allowed: LibraryExercise[]): RepairedLesson[] 
   const flat: FlatLesson[] = [];
 
   plan.sections.slice(0, 5).forEach((section) => {
-    section.lessons.slice(0, 6).forEach((lesson) => {
+    (section.lessons || []).slice(0, 6).forEach((lesson) => {
       if (flat.length >= 25) return;
 
-      const exercises = lesson.exercises.slice(0, 7).map((item) => {
+      const exercises = (lesson.exercises || []).slice(0, 7).map((item) => {
         const entry = allowedById.get(item.exerciseId) || substitute(item, allowed);
         const isTime = item.doseType === 'time';
         const dose: ExerciseDose = {
