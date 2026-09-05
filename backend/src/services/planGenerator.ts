@@ -246,11 +246,28 @@ type RepairedLesson = {
   exercises: { entry: LibraryExercise; dose: ExerciseDose }[];
 };
 
-const repairPlan = (plan: AiPlan, allowed: LibraryExercise[]): RepairedLesson[] => {
+const SECTION_COUNT = 5;
+
+// Title for a section the model failed to provide: the most common focus
+// label among its lessons (already in the user's language), else a generic
+// localized fallback.
+const derivedSectionTitle = (
+  lessons: { lessonType: string }[],
+  index: number,
+  language: ExerciseLanguage
+): string => {
+  const counts = new Map<string, number>();
+  lessons.forEach((lesson) => counts.set(lesson.lessonType, (counts.get(lesson.lessonType) || 0) + 1));
+  const dominant = Array.from(counts.entries()).sort((a, b) => b[1] - a[1])[0]?.[0];
+  if (dominant) return dominant;
+  return language === 'he' ? `שלב ${index + 1}` : `Stage ${index + 1}`;
+};
+
+const repairPlan = (plan: AiPlan, allowed: LibraryExercise[], language: ExerciseLanguage): RepairedLesson[] => {
   const allowedById = new Map(allowed.map((entry) => [entry.id, entry]));
   const warmups = allowed.filter((entry) => entry.category === 'warmup');
 
-  const sectionMetas = plan.sections.slice(0, 5).map((section, index) => ({
+  const providedMetas = (plan.sections || []).slice(0, SECTION_COUNT).map((section, index) => ({
     title: clean(section.title, 100) || `Section ${index + 1}`,
     summary: clean(section.summary, 220),
   }));
@@ -259,8 +276,10 @@ const repairPlan = (plan: AiPlan, allowed: LibraryExercise[]): RepairedLesson[] 
   type FlatLesson = Omit<RepairedLesson, 'sectionTitle' | 'sectionSummary' | 'sectionNumber' | 'lessonNumber'>;
   const flat: FlatLesson[] = [];
 
-  plan.sections.slice(0, 5).forEach((section) => {
-    (section.lessons || []).slice(0, 6).forEach((lesson) => {
+  // Read lessons from every returned section (even if the model collapsed
+  // them into one or two) — the section layout is rebuilt below anyway.
+  (plan.sections || []).forEach((section) => {
+    (section.lessons || []).forEach((lesson) => {
       if (flat.length >= 25) return;
 
       const exercises = (lesson.exercises || []).slice(0, 7).map((item) => {
@@ -293,29 +312,35 @@ const repairPlan = (plan: AiPlan, allowed: LibraryExercise[]): RepairedLesson[] 
     });
   });
 
-  // Second pass: redistribute the lessons evenly across the section titles.
-  // Models sometimes return lopsided structures (a section with 1 lesson),
-  // and lesson-dropping above can shrink sections further — so the section
-  // sizes are decided here in code, not trusted from the model.
-  const sectionCount = Math.max(1, sectionMetas.length);
-  const base = Math.floor(flat.length / sectionCount);
-  const extra = flat.length % sectionCount;
+  // Second pass: always produce exactly SECTION_COUNT sections with the
+  // lessons spread evenly. Models return lopsided or collapsed structures
+  // (a section with 1 lesson, or everything in one section), and lesson
+  // dropping above can shrink sections further — so the layout is decided
+  // here in code, never trusted from the model. Missing section titles are
+  // derived from the lessons themselves.
+  const base = Math.floor(flat.length / SECTION_COUNT);
+  const extra = flat.length % SECTION_COUNT;
 
   const lessons: RepairedLesson[] = [];
   let cursor = 0;
-  sectionMetas.forEach((meta, sectionIndex) => {
+  for (let sectionIndex = 0; sectionIndex < SECTION_COUNT; sectionIndex += 1) {
     const size = base + (sectionIndex < extra ? 1 : 0);
-    for (let position = 0; position < size; position += 1) {
+    const chunk = flat.slice(cursor, cursor + size);
+    const meta = providedMetas[sectionIndex] || {
+      title: derivedSectionTitle(chunk, sectionIndex, language),
+      summary: '',
+    };
+    chunk.forEach((lesson, position) => {
       lessons.push({
-        ...flat[cursor],
+        ...lesson,
         sectionTitle: meta.title,
         sectionSummary: meta.summary,
         sectionNumber: sectionIndex + 1,
         lessonNumber: position + 1,
       });
-      cursor += 1;
-    }
-  });
+    });
+    cursor += size;
+  }
 
   return lessons;
 };
@@ -323,8 +348,10 @@ const repairPlan = (plan: AiPlan, allowed: LibraryExercise[]): RepairedLesson[] 
 // Structural validation used inside the AI retry loop: cheap checks whose
 // failures are worth a model retry (deeper repair happens in repairPlan).
 const validateStructure = (plan: AiPlan, allowedIds: Set<string>, targetLessons: number): string | null => {
-  if (!Array.isArray(plan.sections) || plan.sections.length < 4) {
-    return 'The plan must contain exactly 5 sections.';
+  // Section count is repaired (rebalanced to 5) rather than rejected — small
+  // models often collapse the plan into one or two sections.
+  if (!Array.isArray(plan.sections) || plan.sections.length === 0) {
+    return 'The plan must contain 5 sections with lessons.';
   }
   const allExercises = plan.sections.flatMap((section) =>
     (section.lessons || []).flatMap((lesson) => lesson.exercises || [])
@@ -392,7 +419,7 @@ export const generatePlanForUser = async (
       maxRetries: 1,
     });
 
-    const lessons = repairPlan(aiPlan, allowed);
+    const lessons = repairPlan(aiPlan, allowed, language);
     if (lessons.length < 10) {
       throw new Error('Plan had too few usable lessons after validation');
     }
