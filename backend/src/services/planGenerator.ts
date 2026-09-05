@@ -126,9 +126,23 @@ const difficultyCeiling = (fitnessLevel: string | null): ExerciseDifficulty => {
 // More experienced users get longer paths.
 const lessonsPerSectionFor = (fitnessLevel: string | null): number => {
   const level = String(fitnessLevel || '').toLowerCase();
-  if (level.includes('advanced') || level.includes('intermediate')) return 5;
-  if (level.includes('complete')) return 3;
-  return 4;
+  if (level.includes('advanced') || level.includes('intermediate')) return 6;
+  if (level.includes('complete')) return 4;
+  return 5;
+};
+
+const MAX_LESSONS = 30;
+
+// Real lesson length as the mission player will run it: each dose plus the
+// fixed 10s rest between exercises. Reps are ~3s each; per-side doubles.
+const REST_SECONDS = 10;
+const estimateLessonMinutes = (exercises: { dose: ExerciseDose }[]): number => {
+  const work = exercises.reduce((total, { dose }) => {
+    const seconds = dose.type === 'time' ? dose.amount : dose.amount * 3;
+    return total + (dose.perSide ? seconds * 2 : seconds);
+  }, 0);
+  const rest = Math.max(0, exercises.length - 1) * REST_SECONDS;
+  return clamp(Math.round((work + rest) / 60), 1, 20);
 };
 
 const clamp = (value: number, min: number, max: number) =>
@@ -209,18 +223,31 @@ const buildPrompt = (profile: UserProfile, allowed: LibraryExercise[], language:
   const responseLanguage = language === 'he' ? 'Hebrew' : 'English';
   const system = [
     'You are an expert fitness coach building a Duolingo-style progressive training path for one specific user.',
+    '',
     'HARD RULES:',
     '- Use ONLY exercise ids from the provided catalog. Never invent ids.',
-    `- Every lesson must take roughly ${targetMinutes} minutes (within 2 minutes either way).`,
+    `- The response format has 5 sections (section1–section5), each with ${lessonsPerSection} lessons (lesson1–lesson${lessonsPerSection}) — ${totalLessons} lessons in total. Fill EVERY slot with a distinct, meaningful lesson; never repeat a lesson.`,
     '- The FIRST exercise of every lesson must be from the warmup category.',
-    '- Progress difficulty gradually across sections; early lessons easier, later lessons harder.',
-    `- The response format has 5 sections (section1–section5), each with ${lessonsPerSection} lessons (lesson1–lesson${lessonsPerSection}) — ${totalLessons} lessons in total. Fill EVERY slot with a distinct, meaningful lesson of 3 to 7 exercises; never repeat a lesson.`,
-    '- Give each section its own theme (for example: foundations & warmup, lower body, core, upper body, full-body review) and order them as a progression.',
+    '- For doseType "time", amount is seconds (10-90). For "reps", amount is repetitions (4-20). Use perSide=true for one-sided moves.',
     '- xpReward between 10 and 40, higher for longer/harder lessons.',
     '- lessonType is a short focus label such as "Core", "Legs", "Cardio", "Mobility", "Full body" — never the word "lesson".',
-    '- For doseType "time", amount is seconds (10-90). For "reps", amount is repetitions (4-20). Use perSide=true for one-sided moves.',
-    '- Align the theme of sections and lesson selection with the user\'s goal, sports interests, and follow-up answers.',
     `- Write all titles, summaries, lesson names and lessonType values in ${responseLanguage}.`,
+    '',
+    'SAFETY (highest priority):',
+    '- If the follow-up answers mention sensitive or injured areas (knees, lower back, shoulders, wrists, etc.), AVOID exercises that load them: no jumping/plyometrics for knees, no loaded hinges or sit-ups for lower back, no push-ups/dips/overhead work for shoulders or wrists. Prefer the gentle alternatives in the catalog.',
+    '- Older users (60+) and "Complete beginner" users get low-impact, floor-supported or wall-supported movements only in sections 1-3.',
+    '',
+    'HOW TO DESIGN EACH LESSON:',
+    `- Time budget: about ${targetMinutes} minutes. The player adds 10 seconds of rest between exercises, so total the doses (reps ≈ 3 seconds each, per-side doubles) plus rest and stay within the budget. Short budgets (1-2 min) mean 3 exercises with small doses; 10-15 min budgets mean 6-7 exercises.`,
+    '- Structure: 1 warmup → 2-4 main exercises for the lesson focus → finish with 1 mobility/stretch or lighter movement when the budget allows.',
+    '- Variety: do not use the same non-warmup exercise in two consecutive lessons; across the whole path use as much of the catalog as sensible.',
+    '- Balance within a section: mix pushing and pulling, left/right, and core work rather than repeating one pattern.',
+    '',
+    'HOW TO DESIGN THE PATH:',
+    '- Give each section its own theme and order sections as a progression (for example: foundations, lower body, core, upper body, full-body integration). Later sections use harder catalog exercises and larger doses.',
+    '- Emphasis follows the main goal: weight loss / cardio endurance → more cardio and full_body; build strength → more legs_glutes, upper_body and core with rep-based doses; flexibility / stress relief → more mobility and balance with time-based holds; daily habit / general fitness → an even mix.',
+    '- Weave in the user\'s sports interests (e.g. running → cardio + legs + ankle work; basketball → jumps and lateral agility where safe).',
+    '- Use the follow-up answers to pick focus areas and to decide what to avoid.',
   ].join('\n');
 
   const user = [
@@ -300,7 +327,7 @@ const repairPlan = (plan: AiPlan, allowed: LibraryExercise[], language: Exercise
   // them into one or two) — the section layout is rebuilt below anyway.
   (plan.sections || []).forEach((section) => {
     (section.lessons || []).forEach((lesson) => {
-      if (flat.length >= 25) return;
+      if (flat.length >= MAX_LESSONS) return;
 
       const exercises = (lesson.exercises || []).slice(0, 7).map((item) => {
         const entry = allowedById.get(item.exerciseId) || substitute(item, allowed);
@@ -325,7 +352,9 @@ const repairPlan = (plan: AiPlan, allowed: LibraryExercise[], language: Exercise
         name: clean(lesson.name, 100) || `Lesson ${flat.length + 1}`,
         lessonType: clean(lesson.lessonType, 60) || 'Workout',
         xpReward: clamp(lesson.xpReward, 10, 40),
-        estimatedDurationMinutes: clamp(lesson.estimatedDurationMinutes, 3, 20),
+        // Computed from the actual doses (not trusted from the model) so the
+        // minutes shown match what the mission player will really take.
+        estimatedDurationMinutes: estimateLessonMinutes(exercises),
         difficulty: clean(lesson.difficulty, 30) || 'Beginner',
         exercises,
       });
